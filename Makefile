@@ -29,7 +29,7 @@ test :
 	@for i in $(SUBPATHS); do \
 	echo "make $@ in $$i..."; \
 	(cd $$i; $(MAKE) $@); done
-	find . -name "*.test.*" | grep fail; if [ $$? -eq 0 ]; then exit 1; fi
+	find . -name "*.ebnf.*" | grep fail; if [ $$? -eq 0 ]; then exit 1; fi
 
 .PHONY : import
 import :
