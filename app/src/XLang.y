@@ -449,6 +449,7 @@ void export_ast(args_t &args, xl::node::NodeIdentIFace* ast)
             {
                 EBNFPrinter v(tree_context());
                 rewrite_tree_until_stable(ast, &v);
+                assert(false);
             }
             break;
         case args_t::MODE_LISP:  xl::mvc::MVCView::print_lisp(ast); break;
