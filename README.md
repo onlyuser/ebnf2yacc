@@ -5,6 +5,28 @@ ebnf2yacc
 
 Copyright (C) 2011-2013 Jerry Chen <mailto:onlyuser@gmail.com>
 
+A Motivating Example:
+---------------------
+
+%%
+
+program:
+          (expr)+ '\n' {
+                for(auto p = $1->begin(); p != $1->end(); p++)
+                {
+                    printf("%d\n", std::get<0>(*p));
+                }
+            }
+        ;
+
+expr:
+        INTEGER         { $$ = $1; }
+        | expr '+' expr { $$ = $1 + $3; }
+        | expr '-' expr { $$ = $1 - $3; }
+        ;
+
+%%
+
 About:
 ------
 

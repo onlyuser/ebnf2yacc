@@ -1,7 +1,7 @@
 %{
 #include <vector>
 #include <tuple>
-typedef std::tuple<int, , > program_term_0_type_t;
+typedef std::tuple<int> program_term_0_type_t;
 typedef std::vector<program_term_0_type_t> program_recursive_0_type_t;
     #include <stdio.h>
     int yylex(void);
@@ -33,7 +33,7 @@ program_recursive_0:
 	| program_recursive_0 program_term_0 { $1->push_back(*$2); delete $2; $$ = $1; };
 
 program_term_0:
-	  expr qwe asd { $$ = program_term_0_type_t($1, , ); {} };
+	  expr { $$ = program_term_0_type_t($1); { printf("%d\n", $1); } };
 
 expr:
 	  INTEGER { $$ = $1; }
