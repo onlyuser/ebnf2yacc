@@ -34,6 +34,13 @@ About:
 
 ebnf2yacc is a kleene closure preprocessor for yacc.
 
+Usage:
+------
+
+<pre>
+cat parser.ebnf | ./ebnf2yacc -y > parser.y
+</pre>
+
 Requirements:
 -------------
 
