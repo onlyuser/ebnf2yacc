@@ -13,7 +13,7 @@ ebnf2yacc is a kleene closure preprocessor for yacc.
 A Motivating Example:
 ---------------------
 
-input ebnf:
+input:
 <pre>
 %%
 
@@ -35,7 +35,7 @@ expr:
 %%
 </pre>
 
-output yacc:
+output:
 <pre>
 %%
 
