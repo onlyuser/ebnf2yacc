@@ -13,6 +13,7 @@ ebnf2yacc is a kleene closure preprocessor for yacc.
 A Motivating Example:
 ---------------------
 
+input.ebnf:
 <pre>
 %%
 
@@ -30,6 +31,33 @@ expr:
         | expr '+' expr { $$ = $1 + $3; }
         | expr '-' expr { $$ = $1 - $3; }
         ;
+
+%%
+</pre>
+
+output.y:
+<pre>
+%%
+
+program:
+      program_recursive_0 '\n' { {
+                for(auto p = $1->begin(); p != $1->end(); p++)
+                {
+                    printf("%d\n", std::get<0>(*p));
+                }
+            } delete $1;};
+
+program_recursive_0:
+      program_term_0 { $$ = new program_recursive_0_type_t; $$->push_back(*$1); delete $1; }
+    | program_recursive_0 program_term_0 { $1->push_back(*$2); delete $2; $$ = $1; };
+
+program_term_0:
+      expr { $$ = program_term_0_type_t($1); {} };
+
+expr:
+      INTEGER { $$ = $1; }
+    | expr '+' expr { $$ = $1 + $3; }
+    | expr '-' expr { $$ = $1 - $3; };
 
 %%
 </pre>
