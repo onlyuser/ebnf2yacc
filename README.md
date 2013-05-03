@@ -5,6 +5,11 @@ ebnf2yacc
 
 Copyright (C) 2011-2013 Jerry Chen <mailto:onlyuser@gmail.com>
 
+About:
+------
+
+ebnf2yacc is a kleene closure preprocessor for yacc.
+
 A Motivating Example:
 ---------------------
 
@@ -29,16 +34,11 @@ expr:
 %%
 </pre>
 
-About:
-------
-
-ebnf2yacc is a kleene closure preprocessor for yacc.
-
 Usage:
 ------
 
 <pre>
-cat parser.ebnf | ./ebnf2yacc -y > parser.y
+cat input.ebnf | ./ebnf2yacc -y > output.y
 </pre>
 
 Requirements:
@@ -82,4 +82,4 @@ References:
 Keywords:
 ---------
 
-    Lex, Yacc, Flex, Bison, Parsing, EBNF, Kleene Closure, Kleene Star
+    Lex, Yacc, Flex, Bison, Parser, EBNF, Kleene Closure, Kleene Star
