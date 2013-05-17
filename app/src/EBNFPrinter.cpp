@@ -31,7 +31,8 @@
 #include <assert.h> // assert
 
 #define ENABLE_EBNF
-#define ERROR_KLEENE_NODE_WITHOUT_PAREN "kleene node without paren detected"
+#define ERROR_KLEENE_NODE_WITHOUT_PAREN "kleene node without paren"
+#define ERROR_MISSING_UNION_BLOCK       "missing union block"
 
 //#define DEBUG_EBNF
 #ifdef DEBUG_EBNF
@@ -733,6 +734,33 @@ static xl::node::NodeIdentIFace* make_paren_node(
             );
 }
 
+static xl::node::NodeIdentIFace* make_union_block_definition_node(
+        xl::TreeContext* tc)
+{
+    assert(tc);
+
+    // EBNF:
+    //%union
+    //{
+    //}
+    //
+    // EBNF-XML:
+    //<symbol type="definition">
+    //    <term type="ident" value=union/>
+    //    <symbol type="union_block">
+    //        <symbol type="union_members">
+    //        </symbol>
+    //    </symbol>
+    //</symbol>
+
+    return MAKE_SYMBOL(tc, ID_DEFINITION, 2,
+            MAKE_TERM(ID_IDENT, tc->alloc_unique_string("union")),
+            MAKE_SYMBOL(tc, ID_UNION_BLOCK, 1,
+                    MAKE_SYMBOL(tc, ID_UNION_MEMBERS, 0)
+                    )
+            );
+}
+
 static std::string get_symbol_type_from_symbol_name(
         std::string  symbol_name,
         EBNFContext* ebnf_context)
@@ -1242,8 +1270,8 @@ static void add_shared_typedefs_and_headers(
     assert(innermost_paren_node);
     assert(kleene_context);
     assert(ebnf_context);
-    assert(ebnf_context->def_symbol_name_to_union_typename.size());
-    assert(ebnf_context->union_typename_to_type.size());
+    //assert(ebnf_context->def_symbol_name_to_union_typename.size()); // TODO: fix-me!
+    //assert(ebnf_context->union_typename_to_type.size());            // TODO: fix-me!
     assert(ebnf_context->proto_block_node);
 
     xl::node::NodeIdentIFace* alts_node = get_child(innermost_paren_node);
@@ -1389,6 +1417,18 @@ KleeneContext::KleeneContext(
         EBNFContext*              ebnf_context,
         xl::TreeContext*          tc)
 {
+    assert(ebnf_context);
+    assert(ebnf_context->definitions_node);
+    if(!ebnf_context->union_block_node)
+    {
+        xl::node::NodeIdentIFace* union_block_definition_node = make_union_block_definition_node(tc);
+        tree_changes->add_change(
+                TreeChange::NODE_APPENDS_TO_BACK,
+                ebnf_context->definitions_node,
+                union_block_definition_node);
+        throw ERROR_MISSING_UNION_BLOCK;
+    }
+    assert(ebnf_context->union_block_node);
     kleene_op             = kleene_node->lexer_id();
     outermost_paren_node  = (kleene_node->lexer_id() == '(') ? kleene_node : get_child(kleene_node);
     innermost_paren_node  = get_or_create_innermost_paren_node(tree_changes, outermost_paren_node, tc);
@@ -1443,6 +1483,7 @@ static void add_changes_for_kleene_closure(
                 tree_changes,
                 kleene_context,
                 tc);
+        assert(ebnf_context->proto_block_node);
         add_shared_typedefs_and_headers(
                 tree_changes,
                 kleene_context->rule_name_recursive,
