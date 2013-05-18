@@ -1355,8 +1355,12 @@ KleeneContext::KleeneContext(
         EBNFContext*              ebnf_context,
         xl::TreeContext*          tc)
 {
+    assert(tree_changes);
+    assert(kleene_node);
     assert(ebnf_context);
     assert(ebnf_context->definitions_node);
+    assert(tc);
+
     if(!ebnf_context->union_block_node)
     {
         xl::node::NodeIdentIFace* union_block_definition_node = make_union_block_definition_node(tc);
@@ -1446,7 +1450,7 @@ static void add_changes_for_kleene_closure(
     }
     catch(const char* e)
     {
-        gen_name("", true);
+        gen_name("", true); // NOTE: why?
     }
 }
 
