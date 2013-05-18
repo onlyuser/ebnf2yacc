@@ -1242,18 +1242,6 @@ static xl::node::NodeIdentIFace* get_or_create_innermost_paren_node(
         xl::node::NodeIdentIFace* _node,
         xl::TreeContext*          tc)
 {
-    if(_node->lexer_id() != '(')
-    {
-        xl::node::NodeIdentIFace* paren_node =
-                make_paren_node(_node, tc);
-        if(!paren_node)
-            return NULL;
-        tree_changes->add_change(
-                TreeChange::NODE_REPLACEMENTS,
-                _node,
-                paren_node);
-        throw ERROR_KLEENE_NODE_WITHOUT_PAREN;
-    }
     return get_innermost_paren_node(_node);
 }
 
@@ -1281,7 +1269,9 @@ static void add_shared_typedefs_and_headers(
     if(!alts_symbol)
         return;
     typedef std::vector<std::pair<std::string, xl::node::NodeIdentIFace*>> deferred_recursion_args_t;
+#if 0 // NOTE: might not need this
     deferred_recursion_args_t deferred_recursion_args;
+#endif
     std::vector<std::string> variant_type_vec;
     for(size_t i = 0; i<alts_symbol->size(); i++)
     {
@@ -1318,6 +1308,7 @@ static void add_shared_typedefs_and_headers(
                     break;
                 case xl::node::NodeIdentIFace::SYMBOL:
                     {
+#if 0 // NOTE: might not need this
                         xl::node::NodeIdentIFace* kleene_node = term_node;
                         uint32_t kleene_op = kleene_node->lexer_id();
                         switch(kleene_op)
@@ -1343,6 +1334,7 @@ static void add_shared_typedefs_and_headers(
                                 }
                                 break;
                         }
+#endif
                     }
                     break;
                 default:
@@ -1398,6 +1390,7 @@ static void add_shared_typedefs_and_headers(
                 TreeChange::STRING_INSERTIONS_TO_FRONT,
                 proto_block_term_node,
                 shared_typedefs_and_headers);
+#if 0 // NOTE: might not need this
     for(auto p = deferred_recursion_args.begin(); p != deferred_recursion_args.end(); p++)
     {
         add_shared_typedefs_and_headers(
@@ -1409,6 +1402,7 @@ static void add_shared_typedefs_and_headers(
                 ebnf_context,
                 tc);
     }
+#endif
 }
 
 KleeneContext::KleeneContext(
@@ -1428,10 +1422,22 @@ KleeneContext::KleeneContext(
                 union_block_definition_node);
         throw ERROR_MISSING_UNION_BLOCK;
     }
-    assert(ebnf_context->union_block_node);
-    kleene_op             = kleene_node->lexer_id();
-    outermost_paren_node  = (kleene_node->lexer_id() == '(') ? kleene_node : get_child(kleene_node);
+    assert(ebnf_context->union_block_node); // by this point, we better have it
+    outermost_paren_node = (kleene_node->lexer_id() == '(') ? kleene_node : get_child(kleene_node);
+    if(outermost_paren_node->lexer_id() != '(')
+    {
+        xl::node::NodeIdentIFace* paren_node =
+                make_paren_node(outermost_paren_node, tc);
+        assert(paren_node);
+        tree_changes->add_change(
+                TreeChange::NODE_REPLACEMENTS,
+                outermost_paren_node,
+                paren_node);
+        throw ERROR_KLEENE_NODE_WITHOUT_PAREN;
+    }
+    assert(outermost_paren_node->lexer_id() == '('); // by this point, we better have it
     innermost_paren_node  = get_or_create_innermost_paren_node(tree_changes, outermost_paren_node, tc);
+    kleene_op             = kleene_node->lexer_id();
     rule_node             = get_ancestor_node(ID_RULE, outermost_paren_node);
     std::string rule_name = get_rule_name_from_rule_node(rule_node);
     switch(kleene_op)
