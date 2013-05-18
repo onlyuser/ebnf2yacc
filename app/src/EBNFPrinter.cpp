@@ -369,8 +369,7 @@ static std::string* get_action_string_ptr_from_alt_node(
                 alt_node,
                 1);
         action_node = make_action_node("", tc);
-        if(!action_node)
-            return NULL;
+        assert(action_node);
         tree_changes.add_change(
                 TreeChange::NODE_APPENDS_TO_BACK,
                 alt_node,
@@ -968,8 +967,7 @@ static void add_union_member(
         return;
     xl::node::NodeIdentIFace* union_member_node =
             make_union_member_node(gen_type(rule_name), gen_typename(rule_name), tc);
-    if(!union_member_node)
-        return;
+    assert(union_member_node);
     if(!union_members_symbol->find(union_member_node))
     {
         tree_changes->add_change(
@@ -996,8 +994,7 @@ static void add_def_brace(
     token_vec.push_back(rule_name);
     xl::node::NodeIdentIFace* def_brace_node =
             make_def_brace_node(gen_typename(rule_name), &token_vec, tc);
-    if(!def_brace_node)
-        return;
+    assert(def_brace_node);
     if(!definitions_symbol->find(def_brace_node))
     {
         tree_changes->add_change(
@@ -1058,8 +1055,7 @@ static void add_term_rule(
         return;
     xl::node::NodeIdentIFace* term_rule =
             make_term_rule(rule_name, alts_node, ebnf_context, tc);
-    if(!term_rule)
-        return;
+    assert(term_rule);
 #ifdef DEBUG_EBNF
     std::cout << ">>> (term_rule)" << std::endl;
     EBNFPrinter v(tc); v.dispatch_visit(term_rule); std::cout << std::endl;
@@ -1111,8 +1107,7 @@ static void add_recursive_rule(
                             tc);
             break;
     }
-    if(!recursive_rule)
-        return;
+    assert(recursive_rule);
 #ifdef DEBUG_EBNF
     std::cout << ">>> (recursive_rule)" << std::endl;
     EBNFPrinter v(tc); v.dispatch_visit(recursive_rule); std::cout << std::endl;
@@ -1145,8 +1140,7 @@ static void add_stem_rule(
                     kleene_context->kleene_op,
                     kleene_context->outermost_paren_node,
                     tc);
-    if(!stem_rule)
-        return;
+    assert(stem_rule);
 #ifdef DEBUG_EBNF
     std::cout << ">>> (stem_rule)" << std::endl;
     EBNFPrinter v(tc); v.dispatch_visit(stem_rule); std::cout << std::endl;
