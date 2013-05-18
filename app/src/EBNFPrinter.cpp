@@ -1366,6 +1366,7 @@ KleeneContext::KleeneContext(
     if(!ebnf_context->union_block_node)
     {
         xl::node::NodeIdentIFace* union_block_definition_node = make_union_block_definition_node(tc);
+        assert(union_block_definition_node);
         tree_changes->add_change(
                 TreeChange::NODE_APPENDS_TO_BACK,
                 ebnf_context->definitions_node,
