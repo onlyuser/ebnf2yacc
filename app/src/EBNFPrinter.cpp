@@ -1237,14 +1237,6 @@ static xl::node::NodeIdentIFace* get_innermost_paren_node(xl::node::NodeIdentIFa
     return enter_cyclic_sequence(paren_node, true, '(', ID_RULE_ALTS, ID_RULE_ALT, ID_RULE_TERMS, 0);
 }
 
-static xl::node::NodeIdentIFace* get_or_create_innermost_paren_node(
-        TreeChanges*              tree_changes,
-        xl::node::NodeIdentIFace* _node,
-        xl::TreeContext*          tc)
-{
-    return get_innermost_paren_node(_node);
-}
-
 static void add_shared_typedefs_and_headers(
         TreeChanges*              tree_changes,
         std::string               rule_name_recursive,
@@ -1269,9 +1261,6 @@ static void add_shared_typedefs_and_headers(
     if(!alts_symbol)
         return;
     typedef std::vector<std::pair<std::string, xl::node::NodeIdentIFace*>> deferred_recursion_args_t;
-#if 0 // NOTE: might not need this
-    deferred_recursion_args_t deferred_recursion_args;
-#endif
     std::vector<std::string> variant_type_vec;
     for(size_t i = 0; i<alts_symbol->size(); i++)
     {
@@ -1308,33 +1297,7 @@ static void add_shared_typedefs_and_headers(
                     break;
                 case xl::node::NodeIdentIFace::SYMBOL:
                     {
-#if 0 // NOTE: might not need this
-                        xl::node::NodeIdentIFace* kleene_node = term_node;
-                        uint32_t kleene_op = kleene_node->lexer_id();
-                        switch(kleene_op)
-                        {
-                            case '+':
-                            case '*':
-                            case '?':
-                            case '(':
-                                {
-                                    std::string next_rule_name_recursive =
-                                            gen_name(rule_name_recursive + INTERNAL_NAME_SUFFIX);
-                                    std::string next_rule_name_recursive_type =
-                                            gen_type(next_rule_name_recursive);
-                                    tuple_type_vec.push_back(next_rule_name_recursive_type);
-                                    xl::node::NodeIdentIFace* next_outermost_paren_node =
-                                            (kleene_op == '(') ? kleene_node : get_child(kleene_node);
-                                    xl::node::NodeIdentIFace* next_innermost_paren_node =
-                                            get_or_create_innermost_paren_node(
-                                                    tree_changes, next_outermost_paren_node, tc);
-                                    deferred_recursion_args.push_back(deferred_recursion_args_t::value_type(
-                                            next_rule_name_recursive,
-                                            next_innermost_paren_node));
-                                }
-                                break;
-                        }
-#endif
+                        // NOTE: we can safely skip this
                     }
                     break;
                 default:
@@ -1390,19 +1353,6 @@ static void add_shared_typedefs_and_headers(
                 TreeChange::STRING_INSERTIONS_TO_FRONT,
                 proto_block_term_node,
                 shared_typedefs_and_headers);
-#if 0 // NOTE: might not need this
-    for(auto p = deferred_recursion_args.begin(); p != deferred_recursion_args.end(); p++)
-    {
-        add_shared_typedefs_and_headers(
-                tree_changes,
-                (*p).first,
-                rule_name_term,
-                (*p).second,
-                kleene_context,
-                ebnf_context,
-                tc);
-    }
-#endif
 }
 
 KleeneContext::KleeneContext(
@@ -1436,7 +1386,7 @@ KleeneContext::KleeneContext(
         throw ERROR_KLEENE_NODE_WITHOUT_PAREN;
     }
     assert(outermost_paren_node->lexer_id() == '('); // by this point, we better have it
-    innermost_paren_node  = get_or_create_innermost_paren_node(tree_changes, outermost_paren_node, tc);
+    innermost_paren_node  = get_innermost_paren_node(outermost_paren_node);
     kleene_op             = kleene_node->lexer_id();
     rule_node             = get_ancestor_node(ID_RULE, outermost_paren_node);
     std::string rule_name = get_rule_name_from_rule_node(rule_node);
