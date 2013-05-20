@@ -5,13 +5,13 @@ ebnf2yacc
 
 Copyright (C) 2011-2013 Jerry Chen <mailto:onlyuser@gmail.com>
 
-About:
-------
+About
+-----
 
 ebnf2yacc is a kleene closure preprocessor for yacc.
 
-A Motivating Example:
----------------------
+A Motivating Example
+--------------------
 
 input:
 <pre>
@@ -65,15 +65,15 @@ expr: INTEGER { $$ = $1; };
 %%
 </pre>
 
-Usage:
-------
+Usage
+-----
 
 <pre>
 cat input.ebnf | ./ebnf2yacc -y > output.y
 </pre>
 
-Requirements:
--------------
+Requirements
+------------
 
 Unix tools and 3rd party components (accessible from $PATH):
 
@@ -84,8 +84,8 @@ Unix tools and 3rd party components (accessible from $PATH):
 * $EXTERN_INCLUDE_PATH -- where "ticpp/ticpp.h" resides
 * $EXTERN_LIB_PATH     -- where "libticppd.a" resides
 
-Make targets:
--------------
+Make targets
+------------
 
 <table>
     <tr><th> target </th><th> action                                                </th></tr>
@@ -100,15 +100,15 @@ Make targets:
     <tr><td> clean  </td><td> remove all intermediate files                         </td></tr>
 </table>
 
-References:
------------
+References
+----------
 
 <dl>
     <dt>"Kleene star"</dt>
     <dd>http://en.wikipedia.org/wiki/Kleene_star</dd>
 </dl>
 
-Keywords:
----------
+Keywords
+--------
 
     Lex, Yacc, Flex, Bison, Parser, EBNF, Kleene Closure, Kleene Star
