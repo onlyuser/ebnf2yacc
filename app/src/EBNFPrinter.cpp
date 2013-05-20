@@ -1388,19 +1388,29 @@ KleeneContext::KleeneContext(
     kleene_op             = kleene_node->lexer_id();
     rule_node             = get_ancestor_node(ID_RULE, kleene_node);
     std::string rule_name = get_rule_name_from_rule_node(rule_node);
+//    switch(kleene_op)
+//    {
+//        case '+': rule_name.append("_plus"); break;
+//        case '*': rule_name.append("_star"); break;
+//        case '?': rule_name.append("_opt"); break;
+//        case '(': rule_name.append("_paren"); break;
+//    }
     switch(kleene_op)
     {
     case '+':
+        rule_name_recursive = rule_name + RECURSIVE_NAME_SUFFIX;
+        break;
     case '*':
-        rule_name_recursive = gen_name(rule_name + RECURSIVE_NAME_SUFFIX);
+        rule_name_recursive = rule_name + RECURSIVE_NAME_SUFFIX;
         break;
     case '?':
-        rule_name_recursive = gen_name(rule_name + OPTIONAL_NAME_SUFFIX);
+        rule_name_recursive = rule_name + OPTIONAL_NAME_SUFFIX;
         break;
     case '(':
-        rule_name_recursive = gen_name(rule_name + PAREN_NAME_SUFFIX);
+        rule_name_recursive = rule_name + PAREN_NAME_SUFFIX;
         break;
     }
+    rule_name_recursive  = gen_name(rule_name_recursive);
     rule_name_term       = gen_name(rule_name + TERM_NAME_SUFFIX);
     rule_def_symbol_node = ebnf_context->def_symbol_name_to_node[rule_name];
 }
