@@ -48,7 +48,7 @@ namespace xl { namespace system {
 std::string get_execname()
 {
     static std::string execname;
-    if(!execname.empty())
+    if(execname.size())
         return execname;
     char buf[MAX_EXECNAME_SIZE];
     int n = readlink("/proc/self/exe", buf, sizeof(buf)-1);
