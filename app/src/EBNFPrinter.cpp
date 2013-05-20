@@ -856,7 +856,7 @@ static xl::node::NodeIdentIFace* make_term_rule(
                 std::string symbol_name = get_string_value_from_term_node(term_node_clone);
                 std::string symbol_type =
                         get_symbol_type_from_symbol_name(symbol_name, ebnf_context);
-                if(!symbol_type.empty())
+                if(symbol_type.size())
                     exploded_vars.append(gen_positional_var(j+1));
                 if((j+1) < terms_symbol_clone->size())
                     exploded_vars.append(", ");
@@ -1390,19 +1390,16 @@ KleeneContext::KleeneContext(
     std::string rule_name = get_rule_name_from_rule_node(rule_node);
     switch(kleene_op)
     {
-        case '+': rule_name.append("_plus"); break;
-        case '*': rule_name.append("_star"); break;
-        case '?': rule_name.append("_opt"); break;
-        case '(': rule_name.append("_paren"); break;
-    }
-    switch(kleene_op)
-    {
-        case '+':
-        case '*':
-            rule_name_recursive = gen_name(rule_name + RECURSIVE_NAME_SUFFIX);
-            break;
-        case '?': rule_name_recursive = gen_name(rule_name + OPTIONAL_NAME_SUFFIX); break;
-        case '(': rule_name_recursive = gen_name(rule_name + PAREN_NAME_SUFFIX); break;
+    case '+':
+    case '*':
+        rule_name_recursive = gen_name(rule_name + RECURSIVE_NAME_SUFFIX);
+        break;
+    case '?':
+        rule_name_recursive = gen_name(rule_name + OPTIONAL_NAME_SUFFIX);
+        break;
+    case '(':
+        rule_name_recursive = gen_name(rule_name + PAREN_NAME_SUFFIX);
+        break;
     }
     rule_name_term       = gen_name(rule_name + TERM_NAME_SUFFIX);
     rule_def_symbol_node = ebnf_context->def_symbol_name_to_node[rule_name];
@@ -1569,7 +1566,7 @@ void EBNFPrinter::visit(const xl::node::SymbolNodeIFace* __node)
                 if(more)
                     std::cout << ' ';
             } while(more);
-            if(!union_term_names.empty())
+            if(union_term_names.size())
             {
                 std::string union_type;
                 for(size_t i = 0; i<union_term_names.size()-1; i++) // exclude last
@@ -1599,7 +1596,7 @@ void EBNFPrinter::visit(const xl::node::SymbolNodeIFace* __node)
             {
                 std::string symbol_name = get_string_value_from_term_node(get_child(_node));
                 std::cout << symbol_name;
-                if(!symbol_name.empty())
+                if(symbol_name.size())
                 {
                     ebnf_context.def_symbol_name_to_node[symbol_name] = _node;
                     def_symbol_names.push_back(symbol_name);

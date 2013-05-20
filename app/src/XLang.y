@@ -254,7 +254,7 @@ union_term:
 
 def_proto_block:
       ID_STRING {
-                $$ = (!$1->empty()) ? MAKE_SYMBOL(ID_DEF_PROTO_BLOCK, 1,
+                $$ = $1->size() ? MAKE_SYMBOL(ID_DEF_PROTO_BLOCK, 1,
                         MAKE_TERM(ID_STRING, $1)) : NULL;
             }
     ;
@@ -285,7 +285,7 @@ rule_alt:
 rule_action_block:
       /* empty */ { $$ = NULL; }
     | ID_STRING {
-                $$ = (!$1->empty()) ? MAKE_SYMBOL(ID_RULE_ACTION_BLOCK, 1,
+                $$ = $1->size() ? MAKE_SYMBOL(ID_RULE_ACTION_BLOCK, 1,
                         MAKE_TERM(ID_STRING, $1)) : NULL;
             }
     ;
@@ -312,7 +312,7 @@ rule_term:
 
 code:
       ID_STRING {
-                $$ = (!$1->empty()) ? MAKE_SYMBOL(ID_CODE, 1,
+                $$ = $1->size() ? MAKE_SYMBOL(ID_CODE, 1,
                         MAKE_TERM(ID_STRING, $1)) : NULL;
             }
     ;
