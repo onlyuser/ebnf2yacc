@@ -169,7 +169,7 @@ root:
 //            statement ',' { /* AAA */ $$ = new program_1_type_t($1, ','); }
 //      )* statement {
 //              /* BBB */
-//              if(!$1->empty())
+//              if($1->size())
 //              {
 //                  auto symbol_node = MAKE_SYMBOL(',', 0);
 //                  for(auto p = $1->begin(); p != $1->end(); p++)
@@ -217,7 +217,7 @@ root:
 program:
       program_0 statement {
                 /* BBB */
-                if(!$1->empty())
+                if($1->size())
                 {
                     auto symbol_node = MAKE_SYMBOL(',', 0);
                     for(auto p = $1->begin(); p != $1->end(); p++)
