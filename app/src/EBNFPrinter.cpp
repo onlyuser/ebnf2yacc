@@ -191,6 +191,7 @@ static std::string gen_name(std::string stem, bool reset)
     {
         for(auto p = tally_map.begin(); p != tally_map.end(); p++)
             (*p).second = 0;
+        return "";
     }
     std::stringstream ss;
     ss << stem << '_' << tally_map[stem]++;
