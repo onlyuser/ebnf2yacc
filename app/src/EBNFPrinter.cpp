@@ -1254,7 +1254,6 @@ static void add_shared_typedefs_and_headers(
     auto alts_symbol = dynamic_cast<xl::node::SymbolNodeIFace*>(alts_node);
     if(!alts_symbol)
         return;
-    typedef std::vector<std::pair<std::string, xl::node::NodeIdentIFace*>> deferred_recursion_args_t;
     std::vector<std::string> variant_type_vec;
     for(size_t i = 0; i<alts_symbol->size(); i++)
     {
@@ -1391,16 +1390,19 @@ KleeneContext::KleeneContext(
     std::string rule_name = get_rule_name_from_rule_node(rule_node);
     switch(kleene_op)
     {
+        case '+': rule_name.append("_plus"); break;
+        case '*': rule_name.append("_star"); break;
+        case '?': rule_name.append("_opt"); break;
+        case '(': rule_name.append("_paren"); break;
+    }
+    switch(kleene_op)
+    {
         case '+':
         case '*':
             rule_name_recursive = gen_name(rule_name + RECURSIVE_NAME_SUFFIX);
             break;
-        case '?':
-            rule_name_recursive = gen_name(rule_name + OPTIONAL_NAME_SUFFIX);
-            break;
-        case '(':
-            rule_name_recursive = gen_name(rule_name + PAREN_NAME_SUFFIX);
-            break;
+        case '?': rule_name_recursive = gen_name(rule_name + OPTIONAL_NAME_SUFFIX); break;
+        case '(': rule_name_recursive = gen_name(rule_name + PAREN_NAME_SUFFIX); break;
     }
     rule_name_term       = gen_name(rule_name + TERM_NAME_SUFFIX);
     rule_def_symbol_node = ebnf_context->def_symbol_name_to_node[rule_name];
