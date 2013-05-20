@@ -1386,7 +1386,7 @@ KleeneContext::KleeneContext(
     assert(outermost_paren_node->lexer_id() == '('); // by this point, we better have it
     innermost_paren_node  = get_innermost_paren_node(outermost_paren_node);
     kleene_op             = kleene_node->lexer_id();
-    rule_node             = get_ancestor_node(ID_RULE, outermost_paren_node);
+    rule_node             = get_ancestor_node(ID_RULE, kleene_node);
     std::string rule_name = get_rule_name_from_rule_node(rule_node);
     switch(kleene_op)
     {
