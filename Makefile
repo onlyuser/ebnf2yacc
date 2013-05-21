@@ -29,21 +29,21 @@ test :
 	@for i in $(SUBPATHS); do \
 	echo "make $@ in $$i..."; \
 	(cd $$i; $(MAKE) $@); done
-	find . -name "*.ebnf.*" | grep fail; if [ $$? -eq 0 ]; then exit 1; fi
+	find . -name "*.ebnf.*" | sort | grep fail; if [ $$? -eq 0 ]; then exit 1; fi
 
 .PHONY : import
 import :
 	@for i in $(SUBPATHS); do \
 	echo "make $@ in $$i..."; \
 	(cd $$i; $(MAKE) $@); done
-	find . -name "*.import.*" | grep fail; if [ $$? -eq 0 ]; then exit 1; fi
+	find . -name "*.import.*" | sort | grep fail; if [ $$? -eq 0 ]; then exit 1; fi
 
 .PHONY : pure
 pure :
 	@for i in $(SUBPATHS); do \
 	echo "make $@ in $$i..."; \
 	(cd $$i; $(MAKE) $@); done
-	find . -name "*.pure.*" | grep fail; if [ $$? -eq 0 ]; then exit 1; fi
+	find . -name "*.pure.*" | sort | grep fail; if [ $$? -eq 0 ]; then exit 1; fi
 
 .PHONY : dot
 dot :
@@ -63,7 +63,7 @@ lint :
 	echo "make $@ in $$i..."; \
 	(cd $$i; $(MAKE) $@); done
 	cd lib-xlang; $(MAKE) $@
-	find . -name "*.lint.*" | grep fail; if [ $$? -eq 0 ]; then exit 1; fi
+	find . -name "*.lint.*" | sort | grep fail; if [ $$? -eq 0 ]; then exit 1; fi
 
 .PHONY : doc
 doc :

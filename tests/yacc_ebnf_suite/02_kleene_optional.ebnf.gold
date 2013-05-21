@@ -1,7 +1,7 @@
 %{
-    #include <tuple>
-    typedef std::tuple<int> program_term_0_type_t;
-    typedef program_term_0_type_t program_optional_0_type_t;
+	#include <tuple>
+	typedef std::tuple<int> program_term_0_type_t;
+	typedef program_term_0_type_t program_optional_0_type_t;
     #include <stdio.h>
     int yylex(void);
     void yyerror(char *);

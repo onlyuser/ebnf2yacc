@@ -108,7 +108,7 @@ static xl::node::NodeIdentIFace* get_right_child(xl::node::NodeIdentIFace* _node
 
 static std::string gen_indent()
 {
-    static std::string indent = std::string(4, ' ');
+    static std::string indent = "\t";
     return indent;
 }
 
@@ -773,12 +773,12 @@ static std::string get_symbol_type_from_symbol_name(
 {
     assert(ebnf_context);
 
-    auto p = ebnf_context->def_symbol_name_to_union_typename.find(symbol_name);
-    if(p == ebnf_context->def_symbol_name_to_union_typename.end())
+    auto p = ebnf_context->m_def_symbol_name_to_union_typename.find(symbol_name);
+    if(p == ebnf_context->m_def_symbol_name_to_union_typename.end())
         return "";
     std::string _typename = (*p).second;
-    auto q = ebnf_context->union_typename_to_type.find(_typename);
-    if(q == ebnf_context->union_typename_to_type.end())
+    auto q = ebnf_context->m_union_typename_to_type.find(_typename);
+    if(q == ebnf_context->m_union_typename_to_type.end())
         return "";
     return (*q).second;
 }
@@ -1023,8 +1023,8 @@ static void add_rule(
     assert(new_rule_node);
     assert(node_insert_after);
     assert(ebnf_context);
-    assert(ebnf_context->union_block_node);
-    assert(ebnf_context->definitions_node);
+    assert(ebnf_context->m_union_block_node);
+    assert(ebnf_context->m_definitions_node);
     assert(tc);
 
     tree_changes->add_change(
@@ -1034,12 +1034,12 @@ static void add_rule(
     add_union_member(
             tree_changes,
             new_rule_name,
-            ebnf_context->union_block_node,
+            ebnf_context->m_union_block_node,
             tc);
     add_def_brace(
             tree_changes,
             new_rule_name,
-            ebnf_context->definitions_node,
+            ebnf_context->m_definitions_node,
             tc);
 }
 
@@ -1052,12 +1052,12 @@ static void add_term_rule(
 {
     assert(tree_changes);
     assert(kleene_context);
-    assert(kleene_context->innermost_paren_node);
-    assert(kleene_context->rule_node);
+    assert(kleene_context->m_innermost_paren_node);
+    assert(kleene_context->m_rule_node);
     assert(ebnf_context);
     assert(tc);
 
-    xl::node::NodeIdentIFace* alts_node = get_child(kleene_context->innermost_paren_node);
+    xl::node::NodeIdentIFace* alts_node = get_child(kleene_context->m_innermost_paren_node);
     if(!alts_node)
         return;
     xl::node::NodeIdentIFace* term_rule =
@@ -1072,7 +1072,7 @@ static void add_term_rule(
             tree_changes,
             rule_name,
             term_rule,
-            kleene_context->rule_node,
+            kleene_context->m_rule_node,
             ebnf_context,
             tc);
 }
@@ -1085,32 +1085,32 @@ static void add_recursive_rule(
 {
     assert(tree_changes);
     assert(kleene_context);
-    assert(kleene_context->rule_node);
+    assert(kleene_context->m_rule_node);
     assert(ebnf_context);
     assert(tc);
 
     xl::node::NodeIdentIFace* recursive_rule = NULL;
-    switch(kleene_context->kleene_op)
+    switch(kleene_context->m_kleene_op)
     {
         case '+':
             recursive_rule =
                     make_recursive_rule_plus(
-                            kleene_context->rule_name_recursive,
-                            kleene_context->rule_name_term,
+                            kleene_context->m_rule_name_recursive,
+                            kleene_context->m_rule_name_term,
                             tc);
             break;
         case '*':
             recursive_rule =
                     make_recursive_rule_star(
-                            kleene_context->rule_name_recursive,
-                            kleene_context->rule_name_term,
+                            kleene_context->m_rule_name_recursive,
+                            kleene_context->m_rule_name_term,
                             tc);
             break;
         case '?':
             recursive_rule =
                     make_recursive_rule_optional(
-                            kleene_context->rule_name_recursive,
-                            kleene_context->rule_name_term,
+                            kleene_context->m_rule_name_recursive,
+                            kleene_context->m_rule_name_term,
                             tc);
             break;
     }
@@ -1122,9 +1122,9 @@ static void add_recursive_rule(
 #endif
     add_rule(
             tree_changes,
-            kleene_context->rule_name_recursive,
+            kleene_context->m_rule_name_recursive,
             recursive_rule,
-            kleene_context->rule_node,
+            kleene_context->m_rule_node,
             ebnf_context,
             tc);
 }
@@ -1136,16 +1136,16 @@ static void add_stem_rule(
 {
     assert(tree_changes);
     assert(kleene_context);
-    assert(kleene_context->rule_node);
-    assert(kleene_context->outermost_paren_node);
+    assert(kleene_context->m_rule_node);
+    assert(kleene_context->m_outermost_paren_node);
     assert(tc);
 
     xl::node::NodeIdentIFace* stem_rule =
             make_stem_rule(
-                    kleene_context->rule_name_recursive,
-                    kleene_context->rule_node,
-                    kleene_context->kleene_op,
-                    kleene_context->outermost_paren_node,
+                    kleene_context->m_rule_name_recursive,
+                    kleene_context->m_rule_node,
+                    kleene_context->m_kleene_op,
+                    kleene_context->m_outermost_paren_node,
                     tc);
     assert(stem_rule);
 #ifdef DEBUG_EBNF
@@ -1155,7 +1155,7 @@ static void add_stem_rule(
 #endif
     tree_changes->add_change(
             TreeChange::NODE_REPLACE,
-            kleene_context->rule_node,
+            kleene_context->m_rule_node,
             stem_rule);
 }
 
@@ -1251,9 +1251,9 @@ static void add_shared_typedefs_and_headers(
     assert(innermost_paren_node);
     assert(kleene_context);
     assert(ebnf_context);
-    //assert(ebnf_context->def_symbol_name_to_union_typename.size()); // TODO: fix-me!
-    //assert(ebnf_context->union_typename_to_type.size());            // TODO: fix-me!
-    assert(ebnf_context->proto_block_node);
+    //assert(ebnf_context->m_def_symbol_name_to_union_typename.size()); // TODO: fix-me!
+    //assert(ebnf_context->m_union_typename_to_type.size());            // TODO: fix-me!
+    assert(ebnf_context->m_proto_block_node);
 
     xl::node::NodeIdentIFace* alts_node = get_child(innermost_paren_node);
     if(!alts_node)
@@ -1317,11 +1317,11 @@ static void add_shared_typedefs_and_headers(
     }
     std::string kleene_typedef;
     std::string kleene_depends_typedef;
-    if(kleene_context->kleene_op == '(')
+    if(kleene_context->m_kleene_op == '(')
         kleene_typedef = gen_typedef(kleene_type, gen_type(rule_name_recursive));
     else
     {
-        switch(kleene_context->kleene_op)
+        switch(kleene_context->m_kleene_op)
         {
             case '?':
                 kleene_typedef =
@@ -1344,7 +1344,7 @@ static void add_shared_typedefs_and_headers(
             std::string("\n") + include_headers + "\n" +
             (kleene_depends_typedef.empty() ? "" : gen_indent() + kleene_depends_typedef + "\n") +
             gen_indent() + kleene_typedef;
-    xl::node::NodeIdentIFace* proto_block_term_node = get_child(ebnf_context->proto_block_node);
+    xl::node::NodeIdentIFace* proto_block_term_node = get_child(ebnf_context->m_proto_block_node);
     if(!proto_block_term_node)
         return;
     std::string proto_block_string = get_string_value_from_term_node(proto_block_term_node);
@@ -1364,37 +1364,37 @@ KleeneContext::KleeneContext(
     assert(tree_changes);
     assert(kleene_node);
     assert(ebnf_context);
-    assert(ebnf_context->definitions_node);
+    assert(ebnf_context->m_definitions_node);
     assert(tc);
 
-    if(!ebnf_context->union_block_node)
+    if(!ebnf_context->m_union_block_node)
     {
         xl::node::NodeIdentIFace* union_block_definition_node = make_union_block_definition_node(tc);
         assert(union_block_definition_node);
         tree_changes->add_change(
                 TreeChange::NODE_PUSH_BACK,
-                ebnf_context->definitions_node,
+                ebnf_context->m_definitions_node,
                 union_block_definition_node);
         throw ERROR_MISSING_UNION_BLOCK;
     }
-    assert(ebnf_context->union_block_node); // by this point, we better have it
-    outermost_paren_node = (kleene_node->lexer_id() == '(') ? kleene_node : get_child(kleene_node);
-    if(outermost_paren_node->lexer_id() != '(')
+    assert(ebnf_context->m_union_block_node); // by this point, we better have it
+    m_outermost_paren_node = (kleene_node->lexer_id() == '(') ? kleene_node : get_child(kleene_node);
+    if(m_outermost_paren_node->lexer_id() != '(')
     {
         xl::node::NodeIdentIFace* paren_node =
-                make_paren_node(outermost_paren_node, tc);
+                make_paren_node(m_outermost_paren_node, tc);
         assert(paren_node);
         tree_changes->add_change(
                 TreeChange::NODE_REPLACE,
-                outermost_paren_node,
+                m_outermost_paren_node,
                 paren_node);
         throw ERROR_KLEENE_NODE_WITHOUT_PAREN;
     }
-    assert(outermost_paren_node->lexer_id() == '('); // by this point, we better have it
-    innermost_paren_node  = get_innermost_paren_node(outermost_paren_node);
-    kleene_op             = kleene_node->lexer_id();
-    rule_node             = get_ancestor_node(ID_RULE, kleene_node);
-    std::string rule_name = get_rule_name_from_rule_node(rule_node);
+    assert(m_outermost_paren_node->lexer_id() == '('); // by this point, we better have it
+    m_innermost_paren_node  = get_innermost_paren_node(m_outermost_paren_node);
+    m_kleene_op             = kleene_node->lexer_id();
+    m_rule_node             = get_ancestor_node(ID_RULE, kleene_node);
+    std::string rule_name = get_rule_name_from_rule_node(m_rule_node);
 //    switch(kleene_op)
 //    {
 //        case '+': rule_name.append("_plus"); break;
@@ -1402,24 +1402,24 @@ KleeneContext::KleeneContext(
 //        case '?': rule_name.append("_opt"); break;
 //        case '(': rule_name.append("_paren"); break;
 //    }
-    switch(kleene_op)
+    switch(m_kleene_op)
     {
     case '+':
-        rule_name_recursive = rule_name + RECURSIVE_NAME_SUFFIX;
+        m_rule_name_recursive = rule_name + RECURSIVE_NAME_SUFFIX;
         break;
     case '*':
-        rule_name_recursive = rule_name + RECURSIVE_NAME_SUFFIX;
+        m_rule_name_recursive = rule_name + RECURSIVE_NAME_SUFFIX;
         break;
     case '?':
-        rule_name_recursive = rule_name + OPTIONAL_NAME_SUFFIX;
+        m_rule_name_recursive = rule_name + OPTIONAL_NAME_SUFFIX;
         break;
     case '(':
-        rule_name_recursive = rule_name + PAREN_NAME_SUFFIX;
+        m_rule_name_recursive = rule_name + PAREN_NAME_SUFFIX;
         break;
     }
-    rule_name_recursive  = gen_name(rule_name_recursive);
-    rule_name_term       = gen_name(rule_name + TERM_NAME_SUFFIX);
-    rule_def_symbol_node = ebnf_context->def_symbol_name_to_node[rule_name];
+    m_rule_name_recursive  = gen_name(m_rule_name_recursive);
+    m_rule_name_term       = gen_name(rule_name + TERM_NAME_SUFFIX);
+    m_rule_def_symbol_node = ebnf_context->m_def_symbol_name_to_node[rule_name];
 }
 
 static void add_changes_for_kleene_closure(
@@ -1439,12 +1439,12 @@ static void add_changes_for_kleene_closure(
         kleene_context = new KleeneContext(tree_changes, kleene_node, ebnf_context, tc);
         add_term_rule(
                 tree_changes,
-                (kleene_context->kleene_op == '(') ?
-                        kleene_context->rule_name_recursive : kleene_context->rule_name_term,
+                (kleene_context->m_kleene_op == '(') ?
+                        kleene_context->m_rule_name_recursive : kleene_context->m_rule_name_term,
                 kleene_context,
                 ebnf_context,
                 tc);
-        if(kleene_context->kleene_op != '(')
+        if(kleene_context->m_kleene_op != '(')
             add_recursive_rule(
                     tree_changes,
                     kleene_context,
@@ -1454,12 +1454,12 @@ static void add_changes_for_kleene_closure(
                 tree_changes,
                 kleene_context,
                 tc);
-        assert(ebnf_context->proto_block_node);
+        assert(ebnf_context->m_proto_block_node);
         add_shared_typedefs_and_headers(
                 tree_changes,
-                kleene_context->rule_name_recursive,
-                kleene_context->rule_name_term,
-                kleene_context->innermost_paren_node,
+                kleene_context->m_rule_name_recursive,
+                kleene_context->m_rule_name_term,
+                kleene_context->m_innermost_paren_node,
                 kleene_context,
                 ebnf_context,
                 tc);
@@ -1472,12 +1472,12 @@ static void add_changes_for_kleene_closure(
 
 void EBNFContext::reset()
 {
-    definitions_node = NULL;
-    proto_block_node = NULL;
-    union_block_node = NULL;
-    def_symbol_name_to_node.clear();
-    union_typename_to_type.clear();
-    def_symbol_name_to_union_typename.clear();
+    m_definitions_node = NULL;
+    m_proto_block_node = NULL;
+    m_union_block_node = NULL;
+    m_def_symbol_name_to_node.clear();
+    m_union_typename_to_type.clear();
+    m_def_symbol_name_to_union_typename.clear();
 }
 
 void EBNFPrinter::visit(const xl::node::SymbolNodeIFace* __node)
@@ -1509,7 +1509,7 @@ void EBNFPrinter::visit(const xl::node::SymbolNodeIFace* __node)
             std::cout << std::endl;
             break;
         case ID_DEFINITIONS:
-            ebnf_context.definitions_node = _node;
+            ebnf_context.m_definitions_node = _node;
             do
             {
                 more = visit_next_child(_node);
@@ -1547,17 +1547,17 @@ void EBNFPrinter::visit(const xl::node::SymbolNodeIFace* __node)
                 }
                 visit_next_child(_node);
                 for(auto p = def_symbol_names.begin(); p != def_symbol_names.end(); p++)
-                    ebnf_context.def_symbol_name_to_union_typename[*p] = union_typename;
+                    ebnf_context.m_def_symbol_name_to_union_typename[*p] = union_typename;
             }
             break;
         case ID_DEF_PROTO_BLOCK:
-            ebnf_context.proto_block_node = _node;
+            ebnf_context.m_proto_block_node = _node;
             std::cout << "%{";
             std::cout << get_string_value_from_term_node(get_child(_node));
             std::cout << "%}";
             break;
         case ID_UNION_BLOCK:
-            ebnf_context.union_block_node = _node;
+            ebnf_context.m_union_block_node = _node;
             std::cout << std::endl << '{' << std::endl;
             visit_next_child(_node);
             std::cout << std::endl << '}';
@@ -1590,7 +1590,7 @@ void EBNFPrinter::visit(const xl::node::SymbolNodeIFace* __node)
                     union_type.append(union_term_names[i]);
                 std::string union_typename =
                         union_term_names[union_term_names.size()-1]; // last term is typename
-                ebnf_context.union_typename_to_type[union_typename] = union_type;
+                ebnf_context.m_union_typename_to_type[union_typename] = union_type;
             }
             break;
         case ID_UNION_TERM:
@@ -1615,7 +1615,7 @@ void EBNFPrinter::visit(const xl::node::SymbolNodeIFace* __node)
                 std::cout << symbol_name;
                 if(symbol_name.size())
                 {
-                    ebnf_context.def_symbol_name_to_node[symbol_name] = _node;
+                    ebnf_context.m_def_symbol_name_to_node[symbol_name] = _node;
                     def_symbol_names.push_back(symbol_name);
                 }
             }
