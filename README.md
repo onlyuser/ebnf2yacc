@@ -34,17 +34,21 @@ expr: INTEGER { $$ = $1; };
 
 output:
 <pre>
-
 %{
+    #include <vector>
+    #include <tuple>
     typedef std::tuple<int> program_term_0_type_t;
     typedef std::vector<program_term_0_type_t> program_recursive_0_type_t;
 %}
 
-%union
+%union 
 {
     program_term_0_type_t* program_term_0_type;
     program_recursive_0_type_t* program_recursive_0_type;
 }
+
+%type<program_term_0_type> program_term_0
+%type<program_recursive_0_type> program_recursive_0
 
 %%
 

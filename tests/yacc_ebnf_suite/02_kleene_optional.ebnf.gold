@@ -1,7 +1,7 @@
 %{
 	#include <tuple>
-	typedef std::tuple<int> program_term_0_type_t;
-	typedef program_term_0_type_t program_optional_0_type_t;
+	typedef std::tuple<int> program_opt_term_0_type_t;
+	typedef program_opt_term_0_type_t program_opt_recursive_0_type_t;
     #include <stdio.h>
     int yylex(void);
     void yyerror(char *);
@@ -9,30 +9,30 @@
 %union 
 {
 	int iValue;
-	program_term_0_type_t* program_term_0_type;
-	program_optional_0_type_t* program_optional_0_type;
+	program_opt_term_0_type_t* program_opt_term_0_type;
+	program_opt_recursive_0_type_t* program_opt_recursive_0_type;
 }
 %token INTEGER
 %token<iValue> program expr
-%type<program_term_0_type> program_term_0
-%type<program_optional_0_type> program_optional_0
+%type<program_opt_term_0_type> program_opt_term_0
+%type<program_opt_recursive_0_type> program_opt_recursive_0
 
 %%
 
 program:
-	  program_optional_0 '\n' { {
+	  program_opt_recursive_0 '\n' { {
                 if($1)
                 {
                     printf("%d\n", std::get<0>(*p));
                 }
             } if($1) delete $1;};
 
-program_optional_0:
+program_opt_recursive_0:
 	   { $$ = NULL; }
-	| program_term_0 { $$ = $1; };
+	| program_opt_term_0 { $$ = $1; };
 
-program_term_0:
-	  expr { $$ = program_term_0_type_t($1); {} };
+program_opt_term_0:
+	  expr { $$ = program_opt_term_0_type_t($1); {} };
 
 expr:
 	  INTEGER { $$ = $1; }

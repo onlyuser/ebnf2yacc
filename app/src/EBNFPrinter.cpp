@@ -65,11 +65,12 @@
 #endif
 #define MAKE_SYMBOL xl::mvc::MVCModel::make_symbol
 
-#define RECURSIVE_NAME_SUFFIX "_recursive" // +, *
-#define OPTIONAL_NAME_SUFFIX  "_optional"  // ?
-#define PAREN_NAME_SUFFIX     "_paren"     // ()
-#define TERM_NAME_SUFFIX      "_term"
-#define INTERNAL_NAME_SUFFIX  "_internal"
+#define RECURSIVE_PART_SUFFIX "_recursive" // +, *, ?, ()
+#define TERM_PART_SUFFIX      "_term"
+#define PLUS_SUFFIX           "_plus"
+#define STAR_SUFFIX           "_star"
+#define OPTIONAL_SUFFIX       "_opt"
+#define PAREN_SUFFIX          "_paren"
 #define TYPENAME_SUFFIX       "_type"
 #define TYPE_SUFFIX           "_type_t"
 
@@ -1395,30 +1396,15 @@ KleeneContext::KleeneContext(
     m_kleene_op             = kleene_node->lexer_id();
     m_rule_node             = get_ancestor_node(ID_RULE, kleene_node);
     std::string rule_name = get_rule_name_from_rule_node(m_rule_node);
-//    switch(kleene_op)
-//    {
-//        case '+': rule_name.append("_plus"); break;
-//        case '*': rule_name.append("_star"); break;
-//        case '?': rule_name.append("_opt"); break;
-//        case '(': rule_name.append("_paren"); break;
-//    }
     switch(m_kleene_op)
     {
-    case '+':
-        m_rule_name_recursive = rule_name + RECURSIVE_NAME_SUFFIX;
-        break;
-    case '*':
-        m_rule_name_recursive = rule_name + RECURSIVE_NAME_SUFFIX;
-        break;
-    case '?':
-        m_rule_name_recursive = rule_name + OPTIONAL_NAME_SUFFIX;
-        break;
-    case '(':
-        m_rule_name_recursive = rule_name + PAREN_NAME_SUFFIX;
-        break;
+        case '+': rule_name.append(PLUS_SUFFIX); break;
+        case '*': rule_name.append(STAR_SUFFIX); break;
+        case '?': rule_name.append(OPTIONAL_SUFFIX); break;
+        case '(': rule_name.append(PAREN_SUFFIX); break;
     }
-    m_rule_name_recursive  = gen_name(m_rule_name_recursive);
-    m_rule_name_term       = gen_name(rule_name + TERM_NAME_SUFFIX);
+    m_rule_name_recursive  = gen_name(rule_name + RECURSIVE_PART_SUFFIX);
+    m_rule_name_term       = gen_name(rule_name + TERM_PART_SUFFIX);
     m_rule_def_symbol_node = ebnf_context->m_def_symbol_name_to_node[rule_name];
 }
 
