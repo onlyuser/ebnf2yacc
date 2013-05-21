@@ -34,7 +34,7 @@
     }
 #endif
 
-void TreeChangeImpl<TreeChange::NODE_INSERTIONS_AFTER>::apply()
+void TreeChangeImpl<TreeChange::NODE_INSERT_AFTER>::apply()
 {
     xl::node::NodeIdentIFace* insert_after_node = m_reference_node;
     if(!insert_after_node)
@@ -55,7 +55,7 @@ void TreeChangeImpl<TreeChange::NODE_INSERTIONS_AFTER>::apply()
     parent_symbol->insert_after(insert_after_node, new_node);
 }
 
-void TreeChangeImpl<TreeChange::NODE_APPENDS_TO_BACK>::apply()
+void TreeChangeImpl<TreeChange::NODE_PUSH_BACK>::apply()
 {
     xl::node::NodeIdentIFace* append_to_node = m_reference_node;
     if(!append_to_node)
@@ -83,7 +83,7 @@ void TreeChangeImpl<TreeChange::NODE_APPENDS_TO_BACK>::apply()
 #endif
 }
 
-void TreeChangeImpl<TreeChange::NODE_REPLACEMENTS>::apply()
+void TreeChangeImpl<TreeChange::NODE_REPLACE>::apply()
 {
     xl::node::NodeIdentIFace* find_node = m_reference_node;
     if(!find_node)
@@ -105,7 +105,7 @@ void TreeChangeImpl<TreeChange::NODE_REPLACEMENTS>::apply()
     parent_symbol->replace_first(find_node, replacement_node);
 }
 
-void TreeChangeImpl<TreeChange::NODE_DELETIONS>::apply()
+void TreeChangeImpl<TreeChange::NODE_DELETE>::apply()
 {
     xl::node::NodeIdentIFace* delete_from_node = m_reference_node;
     if(!delete_from_node)
@@ -130,7 +130,7 @@ void TreeChangeImpl<TreeChange::NODE_DELETIONS>::apply()
 #endif
 }
 
-void TreeChangeImpl<TreeChange::STRING_APPENDS_TO_BACK>::apply()
+void TreeChangeImpl<TreeChange::STRING_APPEND>::apply()
 {
     xl::node::NodeIdentIFace* append_to_node = m_reference_node;
     if(!append_to_node)
@@ -141,7 +141,7 @@ void TreeChangeImpl<TreeChange::STRING_APPENDS_TO_BACK>::apply()
         return;
     std::string s = m_new_string;
 #ifdef DEBUG_EBNF
-    std::cout << "STRING_APPEND_TO_BACK " << ptr_to_string(append_to_node) << " ==> "
+    std::cout << "STRING_APPEND " << ptr_to_string(append_to_node) << " ==> "
             << '\"' << s << '\"' << std::endl;
     //xl::mvc::MVCView::print_xml(append_to_node);
 #endif
@@ -149,7 +149,7 @@ void TreeChangeImpl<TreeChange::STRING_APPENDS_TO_BACK>::apply()
     s_lvalue.append(s);
 }
 
-void TreeChangeImpl<TreeChange::STRING_INSERTIONS_TO_FRONT>::apply()
+void TreeChangeImpl<TreeChange::STRING_INSERT_FRONT>::apply()
 {
     xl::node::NodeIdentIFace* insertion_to_node = m_reference_node;
     if(!insertion_to_node)
@@ -160,7 +160,7 @@ void TreeChangeImpl<TreeChange::STRING_INSERTIONS_TO_FRONT>::apply()
         return;
     std::string s = m_new_string;
 #ifdef DEBUG_EBNF
-    std::cout << "STRING_INSERT_TO_FRONT " << ptr_to_string(insertion_to_node) << " ==> "
+    std::cout << "STRING_INSERT_FRONT " << ptr_to_string(insertion_to_node) << " ==> "
             << '\"' << s << '\"' << std::endl;
     //xl::mvc::MVCView::print_xml(insertion_to_node);
 #endif
@@ -186,17 +186,17 @@ void TreeChanges::add_change(
 {
     switch(_type)
     {
-        case TreeChange::NODE_INSERTIONS_AFTER:
+        case TreeChange::NODE_INSERT_AFTER:
             m_tree_changes.push_back(
-                    new TreeChangeImpl<TreeChange::NODE_INSERTIONS_AFTER>(_type, reference_node, new_node));
+                    new TreeChangeImpl<TreeChange::NODE_INSERT_AFTER>(_type, reference_node, new_node));
             break;
-        case TreeChange::NODE_APPENDS_TO_BACK:
+        case TreeChange::NODE_PUSH_BACK:
             m_tree_changes.push_back(
-                    new TreeChangeImpl<TreeChange::NODE_APPENDS_TO_BACK>(_type, reference_node, new_node));
+                    new TreeChangeImpl<TreeChange::NODE_PUSH_BACK>(_type, reference_node, new_node));
             break;
-        case TreeChange::NODE_REPLACEMENTS:
+        case TreeChange::NODE_REPLACE:
             m_tree_changes.push_back(
-                    new TreeChangeImpl<TreeChange::NODE_REPLACEMENTS>(_type, reference_node, new_node));
+                    new TreeChangeImpl<TreeChange::NODE_REPLACE>(_type, reference_node, new_node));
             break;
         default:
             break;
@@ -210,9 +210,9 @@ void TreeChanges::add_change(
 {
     switch(_type)
     {
-        case TreeChange::NODE_DELETIONS:
+        case TreeChange::NODE_DELETE:
             m_tree_changes.push_back(
-                    new TreeChangeImpl<TreeChange::NODE_DELETIONS>(_type, reference_node, index));
+                    new TreeChangeImpl<TreeChange::NODE_DELETE>(_type, reference_node, index));
             break;
         default:
             break;
@@ -226,13 +226,13 @@ void TreeChanges::add_change(
 {
     switch(_type)
     {
-        case TreeChange::STRING_APPENDS_TO_BACK:
+        case TreeChange::STRING_APPEND:
             m_tree_changes.push_back(
-                    new TreeChangeImpl<TreeChange::STRING_APPENDS_TO_BACK>(_type, reference_node, new_string));
+                    new TreeChangeImpl<TreeChange::STRING_APPEND>(_type, reference_node, new_string));
             break;
-        case TreeChange::STRING_INSERTIONS_TO_FRONT:
+        case TreeChange::STRING_INSERT_FRONT:
             m_tree_changes.push_back(
-                    new TreeChangeImpl<TreeChange::STRING_INSERTIONS_TO_FRONT>(_type, reference_node, new_string));
+                    new TreeChangeImpl<TreeChange::STRING_INSERT_FRONT>(_type, reference_node, new_string));
             break;
         default:
             break;

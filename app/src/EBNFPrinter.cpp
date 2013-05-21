@@ -372,13 +372,13 @@ static std::string* get_action_string_ptr_from_alt_node(
     {
         TreeChanges tree_changes;
         tree_changes.add_change(
-                TreeChange::NODE_DELETIONS,
+                TreeChange::NODE_DELETE,
                 alt_node,
                 1);
         action_node = make_action_node("", tc);
         assert(action_node);
         tree_changes.add_change(
-                TreeChange::NODE_APPENDS_TO_BACK,
+                TreeChange::NODE_PUSH_BACK,
                 alt_node,
                 action_node);
         tree_changes.apply();
@@ -978,7 +978,7 @@ static void add_union_member(
     if(!union_members_symbol->find(union_member_node))
     {
         tree_changes->add_change(
-                TreeChange::NODE_APPENDS_TO_BACK,
+                TreeChange::NODE_PUSH_BACK,
                 union_members_symbol,
                 union_member_node);
     }
@@ -1005,7 +1005,7 @@ static void add_def_brace(
     if(!definitions_symbol->find(def_brace_node))
     {
         tree_changes->add_change(
-                TreeChange::NODE_APPENDS_TO_BACK,
+                TreeChange::NODE_PUSH_BACK,
                 definitions_symbol,
                 def_brace_node);
     }
@@ -1028,7 +1028,7 @@ static void add_rule(
     assert(tc);
 
     tree_changes->add_change(
-            TreeChange::NODE_INSERTIONS_AFTER,
+            TreeChange::NODE_INSERT_AFTER,
             node_insert_after,
             new_rule_node);
     add_union_member(
@@ -1154,7 +1154,7 @@ static void add_stem_rule(
     std::cout << "<<< (stem_rule)" << std::endl;
 #endif
     tree_changes->add_change(
-            TreeChange::NODE_REPLACEMENTS,
+            TreeChange::NODE_REPLACE,
             kleene_context->rule_node,
             stem_rule);
 }
@@ -1350,7 +1350,7 @@ static void add_shared_typedefs_and_headers(
     std::string proto_block_string = get_string_value_from_term_node(proto_block_term_node);
     if(proto_block_string.find(shared_typedefs_and_headers) == std::string::npos)
         tree_changes->add_change(
-                TreeChange::STRING_INSERTIONS_TO_FRONT,
+                TreeChange::STRING_INSERT_FRONT,
                 proto_block_term_node,
                 shared_typedefs_and_headers);
 }
@@ -1372,7 +1372,7 @@ KleeneContext::KleeneContext(
         xl::node::NodeIdentIFace* union_block_definition_node = make_union_block_definition_node(tc);
         assert(union_block_definition_node);
         tree_changes->add_change(
-                TreeChange::NODE_APPENDS_TO_BACK,
+                TreeChange::NODE_PUSH_BACK,
                 ebnf_context->definitions_node,
                 union_block_definition_node);
         throw ERROR_MISSING_UNION_BLOCK;
@@ -1385,7 +1385,7 @@ KleeneContext::KleeneContext(
                 make_paren_node(outermost_paren_node, tc);
         assert(paren_node);
         tree_changes->add_change(
-                TreeChange::NODE_REPLACEMENTS,
+                TreeChange::NODE_REPLACE,
                 outermost_paren_node,
                 paren_node);
         throw ERROR_KLEENE_NODE_WITHOUT_PAREN;

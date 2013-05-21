@@ -30,12 +30,12 @@ class TreeChange
 public:
     typedef enum
     {
-        NODE_INSERTIONS_AFTER,
-        NODE_APPENDS_TO_BACK,
-        NODE_REPLACEMENTS,
-        NODE_DELETIONS,
-        STRING_APPENDS_TO_BACK,
-        STRING_INSERTIONS_TO_FRONT
+        NODE_INSERT_AFTER,
+        NODE_PUSH_BACK,
+        NODE_REPLACE,
+        NODE_DELETE,
+        STRING_APPEND,
+        STRING_INSERT_FRONT
     } type_t;
 
     TreeChange(type_t _type, xl::node::NodeIdentIFace* reference_node)
@@ -54,7 +54,7 @@ template<TreeChange::type_t>
 class TreeChangeImpl;
 
 template<>
-class TreeChangeImpl<TreeChange::NODE_INSERTIONS_AFTER> : public TreeChange
+class TreeChangeImpl<TreeChange::NODE_INSERT_AFTER> : public TreeChange
 {
 public:
     TreeChangeImpl(
@@ -69,7 +69,7 @@ private:
 };
 
 template<>
-class TreeChangeImpl<TreeChange::NODE_APPENDS_TO_BACK> : public TreeChange
+class TreeChangeImpl<TreeChange::NODE_PUSH_BACK> : public TreeChange
 {
 public:
     TreeChangeImpl(
@@ -84,7 +84,7 @@ private:
 };
 
 template<>
-class TreeChangeImpl<TreeChange::NODE_REPLACEMENTS> : public TreeChange
+class TreeChangeImpl<TreeChange::NODE_REPLACE> : public TreeChange
 {
 public:
     TreeChangeImpl(
@@ -99,7 +99,7 @@ private:
 };
 
 template<>
-class TreeChangeImpl<TreeChange::NODE_DELETIONS> : public TreeChange
+class TreeChangeImpl<TreeChange::NODE_DELETE> : public TreeChange
 {
 public:
     TreeChangeImpl(
@@ -114,7 +114,7 @@ private:
 };
 
 template<>
-class TreeChangeImpl<TreeChange::STRING_APPENDS_TO_BACK> : public TreeChange
+class TreeChangeImpl<TreeChange::STRING_APPEND> : public TreeChange
 {
 public:
     TreeChangeImpl(
@@ -129,7 +129,7 @@ private:
 };
 
 template<>
-class TreeChangeImpl<TreeChange::STRING_INSERTIONS_TO_FRONT> : public TreeChange
+class TreeChangeImpl<TreeChange::STRING_INSERT_FRONT> : public TreeChange
 {
 public:
     TreeChangeImpl(
