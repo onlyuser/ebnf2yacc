@@ -9,6 +9,7 @@ About
 -----
 
 ebnf2yacc is a kleene closure preprocessor for yacc.
+It takes an ebnf specification as input and generates a yacc grammar.
 
 A Motivating Example
 --------------------
@@ -34,8 +35,10 @@ expr: INTEGER { $$ = $1; };
 output:
 <pre>
 
-typedef std::tuple<int> program_term_0_type_t;
-typedef std::vector<program_term_0_type_t> program_recursive_0_type_t;
+%{
+    typedef std::tuple<int> program_term_0_type_t;
+    typedef std::vector<program_term_0_type_t> program_recursive_0_type_t;
+%}
 
 %union
 {

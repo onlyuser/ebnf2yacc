@@ -1,9 +1,9 @@
 %{
-#include <vector>
-#include <boost/variant.hpp>
-#include <tuple>
-typedef boost::variant<std::tuple<int>, std::tuple<int>, std::tuple<int>> program_term_0_type_t;
-typedef std::vector<program_term_0_type_t> program_recursive_0_type_t;
+    #include <vector>
+    #include <boost/variant.hpp>
+    #include <tuple>
+    typedef boost::variant<std::tuple<int>, std::tuple<int>, std::tuple<int>> program_term_0_type_t;
+    typedef std::vector<program_term_0_type_t> program_recursive_0_type_t;
     #include <stdio.h>
     int yylex(void);
     void yyerror(char *);

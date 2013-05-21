@@ -106,6 +106,12 @@ static xl::node::NodeIdentIFace* get_right_child(xl::node::NodeIdentIFace* _node
     return (*symbol)[1];
 }
 
+static std::string gen_indent()
+{
+    static std::string indent = std::string(4, ' ');
+    return indent;
+}
+
 // string to be inserted to front of proto_block_node's string value
 static std::string gen_tuple_include_headers()
 {
@@ -1300,14 +1306,14 @@ static void add_shared_typedefs_and_headers(
         }
         variant_type_vec.push_back(gen_tuple_type(&tuple_type_vec));
     }
-    std::string include_headers = gen_tuple_include_headers();
+    std::string include_headers = gen_indent() + gen_tuple_include_headers();
     std::string kleene_type;
     if(alts_symbol->size() == 1)
         kleene_type = variant_type_vec[0];
     else
     {
         kleene_type = gen_variant_type(&variant_type_vec);
-        include_headers.insert(0, gen_variant_include_headers() + "\n");
+        include_headers.insert(0, gen_indent() + gen_variant_include_headers() + "\n");
     }
     std::string kleene_typedef;
     std::string kleene_depends_typedef;
@@ -1329,15 +1335,15 @@ static void add_shared_typedefs_and_headers(
                         gen_vector_typedef(
                                 gen_type(rule_name_term),
                                 gen_type(rule_name_recursive));
-                include_headers.insert(0, gen_vector_include_headers() + "\n");
+                include_headers.insert(0, gen_indent() + gen_vector_include_headers() + "\n");
                 break;
         }
         kleene_depends_typedef = gen_typedef(kleene_type, gen_type(rule_name_term));
     }
     std::string shared_typedefs_and_headers =
             std::string("\n") + include_headers + "\n" +
-            (kleene_depends_typedef.empty() ? "" : kleene_depends_typedef + "\n") +
-            kleene_typedef;
+            (kleene_depends_typedef.empty() ? "" : gen_indent() + kleene_depends_typedef + "\n") +
+            gen_indent() + kleene_typedef;
     xl::node::NodeIdentIFace* proto_block_term_node = get_child(ebnf_context->proto_block_node);
     if(!proto_block_term_node)
         return;

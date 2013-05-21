@@ -1,16 +1,16 @@
 %{
-#include <tuple>
-typedef std::tuple<int> program_term_0_term_0_type_t;
-typedef program_term_0_term_0_type_t program_term_0_optional_0_type_t;
-#include <vector>
-#include <tuple>
-typedef std::tuple<int> program_term_0_term_0_type_t;
-typedef std::vector<program_term_0_term_0_type_t> program_term_0_recursive_0_type_t;
-#include <vector>
-#include <boost/variant.hpp>
-#include <tuple>
-typedef boost::variant<std::tuple<>, std::tuple<>, std::tuple<>> program_term_0_type_t;
-typedef std::vector<program_term_0_type_t> program_recursive_0_type_t;
+    #include <tuple>
+    typedef std::tuple<int> program_term_0_term_0_type_t;
+    typedef program_term_0_term_0_type_t program_term_0_optional_0_type_t;
+    #include <vector>
+    #include <tuple>
+    typedef std::tuple<int> program_term_0_term_0_type_t;
+    typedef std::vector<program_term_0_term_0_type_t> program_term_0_recursive_0_type_t;
+    #include <vector>
+    #include <boost/variant.hpp>
+    #include <tuple>
+    typedef boost::variant<std::tuple<>, std::tuple<>, std::tuple<>> program_term_0_type_t;
+    typedef std::vector<program_term_0_type_t> program_recursive_0_type_t;
     #include <stdio.h>
     int yylex(void);
     void yyerror(char *);

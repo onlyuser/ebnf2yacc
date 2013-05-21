@@ -1,8 +1,8 @@
 %{
-#include <vector>
-#include <tuple>
-typedef std::tuple<int, int, int> program_term_0_type_t;
-typedef std::vector<program_term_0_type_t> program_recursive_0_type_t;
+    #include <vector>
+    #include <tuple>
+    typedef std::tuple<int, int, int> program_term_0_type_t;
+    typedef std::vector<program_term_0_type_t> program_recursive_0_type_t;
     #include <stdio.h>
     int yylex(void);
     void yyerror(char *);
