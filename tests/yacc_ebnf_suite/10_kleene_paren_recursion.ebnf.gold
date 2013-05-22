@@ -59,14 +59,14 @@ program_plus_term_0:
 	  program_plus_term_0_plus_recursive_0 program_plus_term_0_star_recursive_0 program_plus_term_0_opt_recursive_0 { { { { $$ = program_plus_term_0_type_t(, , ); {} } delete $1;} delete $2;} if($3) delete $3;};
 
 program_plus_term_0_opt_recursive_0:
-	   { $$ = NULL; }
+	  /* empty */ { $$ = NULL; }
 	| program_plus_term_0_opt_term_0 { $$ = $1; };
 
 program_plus_term_0_opt_term_0:
 	  asd { $$ = program_plus_term_0_opt_term_0_type_t($1); {} };
 
 program_plus_term_0_star_recursive_0:
-	   { $$ = new program_plus_term_0_star_recursive_0_type_t; }
+	  /* empty */ { $$ = new program_plus_term_0_star_recursive_0_type_t; }
 	| program_plus_term_0_star_recursive_0 program_plus_term_0_star_term_0 { $1->push_back(*$2); delete $2; $$ = $1; };
 
 program_plus_term_0_star_term_0:

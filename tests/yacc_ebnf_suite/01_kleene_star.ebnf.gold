@@ -29,7 +29,7 @@ program:
             } delete $1;};
 
 program_star_recursive_0:
-	   { $$ = new program_star_recursive_0_type_t; }
+	  /* empty */ { $$ = new program_star_recursive_0_type_t; }
 	| program_star_recursive_0 program_star_term_0 { $1->push_back(*$2); delete $2; $$ = $1; };
 
 program_star_term_0:

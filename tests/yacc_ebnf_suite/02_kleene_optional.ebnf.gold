@@ -28,7 +28,7 @@ program:
             } if($1) delete $1;};
 
 program_opt_recursive_0:
-	   { $$ = NULL; }
+	  /* empty */ { $$ = NULL; }
 	| program_opt_term_0 { $$ = $1; };
 
 program_opt_term_0:

@@ -609,6 +609,9 @@ static xl::node::NodeIdentIFace* make_recursive_rule_star(
     //    <term type="ident" value=rule_name_recursive/>
     //    <symbol type="rule_alts">
     //        <symbol type="rule_alt">
+    //            <symbol type="rule_terms">
+    //                <term type="ident" value=/* empty *//>
+    //            </symbol>
     //            <symbol type="rule_action_block">
     //                <term type="string" value=" $$ = new rule_name_recursive_t; "/>
     //            </symbol>
@@ -628,7 +631,10 @@ static xl::node::NodeIdentIFace* make_recursive_rule_star(
     return MAKE_SYMBOL(tc, ID_RULE, 2,
             MAKE_TERM(ID_IDENT, tc->alloc_unique_string(rule_name_recursive)),
             MAKE_SYMBOL(tc, ID_RULE_ALTS, 2,
-                    MAKE_SYMBOL(tc, ID_RULE_ALT, 1,
+                    MAKE_SYMBOL(tc, ID_RULE_ALT, 2,
+                            MAKE_SYMBOL(tc, ID_RULE_TERMS, 1, // TODO: fix-me!
+                                    MAKE_TERM(ID_IDENT, tc->alloc_unique_string("/* empty */"))
+                                    ),
                             MAKE_SYMBOL(tc, ID_RULE_ACTION_BLOCK, 1,
                                     MAKE_TERM(ID_STRING,
                                             tc->alloc_string(" $$ = new " + gen_type(rule_name_recursive) + "; ")
@@ -668,6 +674,9 @@ static xl::node::NodeIdentIFace* make_recursive_rule_optional(
     //    <term type="ident" value=rule_name_optional/>
     //    <symbol type="rule_alts">
     //        <symbol type="rule_alt">
+    //            <symbol type="rule_terms">
+    //                <term type="ident" value=/* empty *//>
+    //            </symbol>
     //            <symbol type="rule_action_block">
     //                <term type="string" value=" $$ = NULL; "/>
     //            </symbol>
@@ -686,7 +695,10 @@ static xl::node::NodeIdentIFace* make_recursive_rule_optional(
     return MAKE_SYMBOL(tc, ID_RULE, 2,
             MAKE_TERM(ID_IDENT, tc->alloc_unique_string(rule_name_optional)),
             MAKE_SYMBOL(tc, ID_RULE_ALTS, 2,
-                    MAKE_SYMBOL(tc, ID_RULE_ALT, 1,
+                    MAKE_SYMBOL(tc, ID_RULE_ALT, 2,
+                            MAKE_SYMBOL(tc, ID_RULE_TERMS, 1, // TODO: fix-me!
+                                    MAKE_TERM(ID_IDENT, tc->alloc_unique_string("/* empty */"))
+                                    ),
                             MAKE_SYMBOL(tc, ID_RULE_ACTION_BLOCK, 1,
                                     MAKE_TERM(ID_STRING, tc->alloc_string(" $$ = NULL; "))
                                     )
