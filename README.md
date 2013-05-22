@@ -37,8 +37,8 @@ output:
 %{
     #include &lt;vector&gt;
     #include &lt;tuple&gt;
-    typedef std::tuple<int> program_term_0_type_t;
-    typedef std::vector<program_term_0_type_t> program_recursive_0_type_t;
+    typedef std::tuple&lt;int&gt; program_term_0_type_t;
+    typedef std::vector&lt;program_term_0_type_t&gt; program_recursive_0_type_t;
 %}
 
 %union 
