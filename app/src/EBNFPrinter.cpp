@@ -510,11 +510,12 @@ static xl::node::NodeIdentIFace* make_stem_rule(
         {
             size_t position = find_node->index()+1;
             std::string new_action;
-            new_action.append(std::string(" {") + (*action_string_ptr) + "} ");
+            if(action_string_ptr->size())
+                new_action.append(std::string(" {") + *action_string_ptr + "} ");
             if(kleene_op == '?')
                 new_action.append(std::string("if(") + gen_positional_var(position) + ") ");
             new_action.append(gen_delete_rule_rvalue_term(position));
-            (*action_string_ptr) = new_action;
+            *action_string_ptr = new_action;
         }
     }
     xl::node::NodeIdentIFace* replacement_node =
@@ -631,10 +632,7 @@ static xl::node::NodeIdentIFace* make_recursive_rule_star(
     return MAKE_SYMBOL(tc, ID_RULE, 2,
             MAKE_TERM(ID_IDENT, tc->alloc_unique_string(rule_name_recursive)),
             MAKE_SYMBOL(tc, ID_RULE_ALTS, 2,
-                    MAKE_SYMBOL(tc, ID_RULE_ALT, 2,
-                            MAKE_SYMBOL(tc, ID_RULE_TERMS, 1, // TODO: fix-me!
-                                    MAKE_TERM(ID_IDENT, tc->alloc_unique_string("/* empty */"))
-                                    ),
+                    MAKE_SYMBOL(tc, ID_RULE_ALT, 1,
                             MAKE_SYMBOL(tc, ID_RULE_ACTION_BLOCK, 1,
                                     MAKE_TERM(ID_STRING,
                                             tc->alloc_string(" $$ = new " + gen_type(rule_name_recursive) + "; ")
@@ -695,10 +693,7 @@ static xl::node::NodeIdentIFace* make_recursive_rule_optional(
     return MAKE_SYMBOL(tc, ID_RULE, 2,
             MAKE_TERM(ID_IDENT, tc->alloc_unique_string(rule_name_optional)),
             MAKE_SYMBOL(tc, ID_RULE_ALTS, 2,
-                    MAKE_SYMBOL(tc, ID_RULE_ALT, 2,
-                            MAKE_SYMBOL(tc, ID_RULE_TERMS, 1, // TODO: fix-me!
-                                    MAKE_TERM(ID_IDENT, tc->alloc_unique_string("/* empty */"))
-                                    ),
+                    MAKE_SYMBOL(tc, ID_RULE_ALT, 1,
                             MAKE_SYMBOL(tc, ID_RULE_ACTION_BLOCK, 1,
                                     MAKE_TERM(ID_STRING, tc->alloc_string(" $$ = NULL; "))
                                     )
@@ -884,8 +879,9 @@ static xl::node::NodeIdentIFace* make_term_rule(
             std::string new_action;
             new_action.append(
                     std::string(" $$ = ") + gen_type(rule_name_term) + "(" + exploded_vars + "); ");
-            new_action.append(std::string("{") + (*action_string_ptr) + "} ");
-            (*action_string_ptr) = new_action; // TODO: fix-me!
+            if(action_string_ptr->size())
+                new_action.append(std::string("{") + *action_string_ptr + "} ");
+            *action_string_ptr = new_action; // TODO: fix-me!
         }
     }
     return MAKE_SYMBOL(tc, ID_RULE, 2,
@@ -1641,11 +1637,21 @@ void EBNFPrinter::visit(const xl::node::SymbolNodeIFace* __node)
             } while(more);
             break;
         case ID_RULE_ALT:
-            if(visit_next_child(_node))
             {
-                set_allow_visit_null(false);
-                visit_next_child(_node);
-                set_allow_visit_null(true);
+                xl::node::NodeIdentIFace* child = get_next_child(_node);
+                if(child)
+                {
+                    if(child->lexer_id() == ID_RULE_ACTION_BLOCK)
+                    {
+                        std::cout << "/* empty */";
+                        dispatch_visit(child);
+                        break;
+                    }
+                    dispatch_visit(child);
+                    set_allow_visit_null(false);
+                    visit_next_child(_node);
+                    set_allow_visit_null(true);
+                }
             }
             break;
         case ID_RULE_ACTION_BLOCK:

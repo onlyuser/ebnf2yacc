@@ -34,9 +34,9 @@ program_plus_recursive_0:
 	| program_plus_recursive_0 program_plus_term_0 { $1->push_back(*$2); delete $2; $$ = $1; };
 
 program_plus_term_0:
-	  expr { $$ = program_plus_term_0_type_t($1); {} }
-	| qwe { $$ = program_plus_term_0_type_t($1); {} }
-	| asd { $$ = program_plus_term_0_type_t($1); {} };
+	  expr { $$ = program_plus_term_0_type_t($1); }
+	| qwe { $$ = program_plus_term_0_type_t($1); }
+	| asd { $$ = program_plus_term_0_type_t($1); };
 
 expr:
 	  INTEGER { $$ = $1; }

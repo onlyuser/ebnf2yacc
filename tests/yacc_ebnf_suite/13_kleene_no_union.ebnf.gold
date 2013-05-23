@@ -31,7 +31,7 @@ program_plus_recursive_0:
 	| program_plus_recursive_0 program_plus_term_0 { $1->push_back(*$2); delete $2; $$ = $1; };
 
 program_plus_term_0:
-	  expr { $$ = program_plus_term_0_type_t(); {} };
+	  expr { $$ = program_plus_term_0_type_t(); };
 
 expr:
 	  INTEGER { $$ = $1; }

@@ -57,30 +57,30 @@ program_plus_recursive_0:
 	| program_plus_recursive_0 program_plus_term_0 { $1->push_back(*$2); delete $2; $$ = $1; };
 
 program_plus_term_0:
-	  program_plus_term_0_plus_recursive_0 { { $$ = program_plus_term_0_type_t(); {} } delete $1;}
-	| program_plus_term_0_star_recursive_0 { { $$ = program_plus_term_0_type_t(); {} } delete $1;}
-	| program_plus_term_0_opt_recursive_0 { { $$ = program_plus_term_0_type_t(); {} } if($1) delete $1;};
+	  program_plus_term_0_plus_recursive_0 { { $$ = program_plus_term_0_type_t(); } delete $1;}
+	| program_plus_term_0_star_recursive_0 { { $$ = program_plus_term_0_type_t(); } delete $1;}
+	| program_plus_term_0_opt_recursive_0 { { $$ = program_plus_term_0_type_t(); } if($1) delete $1;};
 
 program_plus_term_0_opt_recursive_0:
 	  /* empty */ { $$ = NULL; }
 	| program_plus_term_0_opt_term_0 { $$ = $1; };
 
 program_plus_term_0_opt_term_0:
-	  asd { $$ = program_plus_term_0_opt_term_0_type_t($1); {} };
+	  asd { $$ = program_plus_term_0_opt_term_0_type_t($1); };
 
 program_plus_term_0_star_recursive_0:
 	  /* empty */ { $$ = new program_plus_term_0_star_recursive_0_type_t; }
 	| program_plus_term_0_star_recursive_0 program_plus_term_0_star_term_0 { $1->push_back(*$2); delete $2; $$ = $1; };
 
 program_plus_term_0_star_term_0:
-	  qwe { $$ = program_plus_term_0_star_term_0_type_t($1); {} };
+	  qwe { $$ = program_plus_term_0_star_term_0_type_t($1); };
 
 program_plus_term_0_plus_recursive_0:
 	  program_plus_term_0_plus_term_0 { $$ = new program_plus_term_0_plus_recursive_0_type_t; $$->push_back(*$1); delete $1; }
 	| program_plus_term_0_plus_recursive_0 program_plus_term_0_plus_term_0 { $1->push_back(*$2); delete $2; $$ = $1; };
 
 program_plus_term_0_plus_term_0:
-	  expr { $$ = program_plus_term_0_plus_term_0_type_t($1); {} };
+	  expr { $$ = program_plus_term_0_plus_term_0_type_t($1); };
 
 expr:
 	  INTEGER { $$ = $1; }

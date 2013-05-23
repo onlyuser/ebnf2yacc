@@ -32,7 +32,7 @@ program_opt_recursive_0:
 	| program_opt_term_0 { $$ = $1; };
 
 program_opt_term_0:
-	  expr { $$ = program_opt_term_0_type_t($1); {} };
+	  expr { $$ = program_opt_term_0_type_t($1); };
 
 expr:
 	  INTEGER { $$ = $1; }
