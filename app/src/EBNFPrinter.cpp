@@ -31,6 +31,7 @@
 #include <assert.h> // assert
 
 #define ENABLE_EBNF
+#define ERROR_LEXER_ID_NOT_FOUND        "missing lexer id handler, most likely you forgot to register one"
 #define ERROR_KLEENE_NODE_WITHOUT_PAREN "kleene node without paren"
 #define ERROR_MISSING_UNION_BLOCK       "missing union block"
 
@@ -1188,7 +1189,7 @@ static xl::node::NodeIdentIFace* find_unique_child_by_lexer_id(
     return unique_child_node;
 }
 
-static xl::node::NodeIdentIFace* enter_cyclic_sequence(
+static xl::node::NodeIdentIFace* enter_cyclic_hier(
         xl::node::NodeIdentIFace* _node,
         bool                      cyclic,
         ...)
@@ -1244,7 +1245,7 @@ static xl::node::NodeIdentIFace* get_innermost_paren_node(xl::node::NodeIdentIFa
     assert(paren_node);
     assert(paren_node->lexer_id() == '(');
 
-    return enter_cyclic_sequence(paren_node, true, '(', ID_RULE_ALTS, ID_RULE_ALT, ID_RULE_TERMS, 0);
+    return enter_cyclic_hier(paren_node, true, '(', ID_RULE_ALTS, ID_RULE_ALT, ID_RULE_TERMS, 0);
 }
 
 static void add_shared_typedefs_and_headers(
@@ -1400,10 +1401,10 @@ KleeneContext::KleeneContext(
         throw ERROR_KLEENE_NODE_WITHOUT_PAREN;
     }
     assert(m_outermost_paren_node->lexer_id() == '('); // by this point, we better have it
-    m_innermost_paren_node  = get_innermost_paren_node(m_outermost_paren_node);
-    m_kleene_op             = kleene_node->lexer_id();
-    m_rule_node             = get_ancestor_node(ID_RULE, kleene_node);
-    std::string rule_name = get_rule_name_from_rule_node(m_rule_node);
+    m_innermost_paren_node = get_innermost_paren_node(m_outermost_paren_node);
+    m_kleene_op            = kleene_node->lexer_id();
+    m_rule_node            = get_ancestor_node(ID_RULE, kleene_node);
+    std::string rule_name  = get_rule_name_from_rule_node(m_rule_node);
     switch(m_kleene_op)
     {
         case '+': rule_name.append(PLUS_SUFFIX); break;
@@ -1448,7 +1449,6 @@ static void add_changes_for_kleene_closure(
                 tree_changes,
                 kleene_context,
                 tc);
-        assert(ebnf_context->m_proto_block_node);
         add_shared_typedefs_and_headers(
                 tree_changes,
                 kleene_context->m_rule_name_recursive,
@@ -1491,10 +1491,8 @@ void EBNFPrinter::visit(const xl::node::SymbolNodeIFace* __node)
     switch(kleene_op)
     {
         case ID_GRAMMAR:
-            {
-                entered_kleene_closure = false;
-                ebnf_context.reset();
-            }
+            entered_kleene_closure = false;
+            ebnf_context.reset();
             visit_next_child(_node);
             std::cout << std::endl << std::endl << "%%" << std::endl << std::endl;
             visit_next_child(_node);
@@ -1531,14 +1529,12 @@ void EBNFPrinter::visit(const xl::node::SymbolNodeIFace* __node)
                 std::string union_typename;
                 std::cout << '%';
                 visit_next_child(_node);
-                {
-                    std::cout << '<';
-                    xl::node::NodeIdentIFace* child_node = NULL;
-                    visit_next_child(_node, &child_node);
-                    if(child_node)
-                        union_typename = get_string_value_from_term_node(child_node);
-                    std::cout << "> ";
-                }
+                std::cout << '<';
+                xl::node::NodeIdentIFace* child_node = NULL;
+                visit_next_child(_node, &child_node);
+                if(child_node)
+                    union_typename = get_string_value_from_term_node(child_node);
+                std::cout << "> ";
                 visit_next_child(_node);
                 for(auto p = def_symbol_names.begin(); p != def_symbol_names.end(); p++)
                     ebnf_context.m_def_symbol_name_to_union_typename[*p] = union_typename;
@@ -1676,11 +1672,13 @@ void EBNFPrinter::visit(const xl::node::SymbolNodeIFace* __node)
                 if(!entered_kleene_closure)
                 {
                     if(m_tree_changes)
+                    {
                         add_changes_for_kleene_closure(
                                 m_tree_changes,
                                 _node,
                                 &ebnf_context,
                                 m_tc);
+                    }
                     entered_kleene_closure = true; // only enter once
                 }
 #endif
@@ -1695,6 +1693,9 @@ void EBNFPrinter::visit(const xl::node::SymbolNodeIFace* __node)
             break;
         case ID_CODE:
             std::cout << get_string_value_from_term_node(get_child(_node));
+            break;
+        default:
+            throw ERROR_LEXER_ID_NOT_FOUND;
             break;
     }
 #ifdef DEBUG_EBNF
