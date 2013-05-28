@@ -41,11 +41,14 @@ void reset_ss(std::stringstream &ss)
     ss.clear();
 }
 
-// Temporary workaround for flex bug: yy_top_state crashes on INITIAL state - ID: 3462982
+// does nothing, returns void like yy_pop_state
+#define NOOP [](){}
+
+// temporary workaround for flex bug: yy_top_state crashes on INITIAL state - ID: 3462982
 // http://sourceforge.net/tracker/?func=detail&aid=3462982&group_id=97492&atid=618177
-#define TOP_STATE (                                           \
-        yy_push_state(INITIAL),                               \
-        ((yy_start_stack_ptr>1) ? yy_pop_state() : [](){}()), \
+#define TOP_STATE (                                         \
+        yy_push_state(INITIAL),                             \
+        ((yy_start_stack_ptr>1) ? yy_pop_state() : NOOP()), \
         yy_top_state())
 
 %}
