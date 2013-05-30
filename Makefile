@@ -16,13 +16,13 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 LIB_PATH = lib
-SUBPATHS = app
+SUBPATHS = app 0_XLang_full
 
 .DEFAULT_GOAL : all
 all :
 	@for i in $(SUBPATHS); do \
 	echo "make $@ in $$i..."; \
-	cd $$i; $(MAKE); done
+	(cd $$i; $(MAKE) $@); done
 
 .PHONY : test
 test :
