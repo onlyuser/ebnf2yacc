@@ -152,13 +152,13 @@ clean_binary : clean_objects clean_parent_libs
 #==================
 
 .PHONY : test
-test : $(BINARY) ebnf
+test : $(BINARY) test_ebnf
 	cd $(TEST_PATH); $(MAKE) $@ \
 			BUILD_PATH=$(abspath $(BUILD_PATH)) BINARY=$(abspath $(BINARY)) INPUT_MODE="stdin" \
 			YACC_NIEMANN_SUITE=1
 
 .PHONY : clean_test
-clean_test : clean_ebnf
+clean_test : clean_test_ebnf
 	cd $(TEST_PATH); $(MAKE) $@ \
 			BUILD_PATH=$(abspath $(BUILD_PATH)) \
 			YACC_NIEMANN_SUITE=1
@@ -180,17 +180,17 @@ clean_import :
 			YACC_NIEMANN_SUITE=1
 
 #==================
-# ebnf
+# test_ebnf
 #==================
 
-.PHONY : ebnf
-ebnf : $(BINARY)
+.PHONY : test_ebnf
+test_ebnf : $(BINARY)
 	cd $(TEST_PATH); $(MAKE) $@ \
 			BUILD_PATH=$(abspath $(BUILD_PATH)) BINARY=$(abspath $(BINARY)) INPUT_MODE="stdin" \
 			YACC_EBNF_SUITE=1
 
-.PHONY : clean_ebnf
-clean_ebnf :
+.PHONY : clean_test_ebnf
+clean_test_ebnf :
 	cd $(TEST_PATH); $(MAKE) $@ \
 			BUILD_PATH=$(abspath $(BUILD_PATH)) \
 			YACC_EBNF_SUITE=1
@@ -288,5 +288,5 @@ clean_doc :
 #==================
 
 .PHONY : clean
-clean : clean_binary clean_test clean_import clean_ebnf clean_pure clean_dot clean_xml clean_lint clean_doc
+clean : clean_binary clean_test clean_import clean_pure clean_dot clean_xml clean_lint clean_doc
 	-rmdir $(BUILD_PATH) $(BIN_PATH)

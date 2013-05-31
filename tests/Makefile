@@ -108,7 +108,7 @@ clean_import :
 	-rm $(IMPORT_PASS_FILES) $(IMPORT_FAIL_FILES)
 
 #==================
-# ebnf
+# test_ebnf
 #==================
 
 EBNF_FILES = $(patsubst %, $(BUILD_PATH)/$(OUT_PREFIX).%.ebnf, $(TEST_FILE_STEMS))
@@ -124,11 +124,11 @@ $(BUILD_PATH)/$(OUT_PREFIX).%.ebnf.pass : $(BINARY) $(TEST_PATH)/%.ebnf.test
 			$(TEST_PATH)/$*.ebnf.gold \
 			$(BUILD_PATH)/$(OUT_PREFIX).$*.ebnf
 
-.PHONY : ebnf
-ebnf : $(EBNF_PASS_FILES)
+.PHONY : test_ebnf
+test_ebnf : $(EBNF_PASS_FILES)
 
-.PHONY : clean_ebnf
-clean_ebnf :
+.PHONY : clean_test_ebnf
+clean_test_ebnf :
 	-rm $(EBNF_PASS_FILES) $(EBNF_FAIL_FILES)
 
 #==================
@@ -203,4 +203,4 @@ clean_xml :
 #==================
 
 .PHONY : clean
-clean : clean_test clean_import clean_ebnf clean_pure clean_dot clean_xml
+clean : clean_test clean_import clean_test_ebnf clean_pure clean_dot clean_xml
