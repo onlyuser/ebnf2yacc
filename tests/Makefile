@@ -84,30 +84,6 @@ clean_test :
 	-rm $(TEST_PASS_FILES) $(TEST_FAIL_FILES)
 
 #==================
-# import
-#==================
-
-IMPORT_FILES = $(patsubst %, $(BUILD_PATH)/$(OUT_PREFIX).%.import, $(TEST_FILE_STEMS))
-IMPORT_PASS_FILES = $(patsubst %, %.pass, $(IMPORT_FILES))
-IMPORT_FAIL_FILES = $(patsubst %, %.fail, $(IMPORT_FILES))
-TEST_SH := $(SCRIPT_PATH)/test.sh
-
-$(BUILD_PATH)/$(OUT_PREFIX).%.import.pass : $(BINARY) $(TEST_PATH)/%.import.test-gold
-	-$(TEST_SH) $(BINARY) \
-			--xml \
-			$(INPUT_MODE) \
-			$(TEST_PATH)/$*.import.test-gold \
-			$(TEST_PATH)/$*.import.test-gold \
-			$(BUILD_PATH)/$(OUT_PREFIX).$*.import
-
-.PHONY : import
-import : $(IMPORT_PASS_FILES)
-
-.PHONY : clean_import
-clean_import :
-	-rm $(IMPORT_PASS_FILES) $(IMPORT_FAIL_FILES)
-
-#==================
 # test_ebnf
 #==================
 
@@ -130,6 +106,30 @@ test_ebnf : $(EBNF_PASS_FILES)
 .PHONY : clean_test_ebnf
 clean_test_ebnf :
 	-rm $(EBNF_PASS_FILES) $(EBNF_FAIL_FILES)
+
+#==================
+# import
+#==================
+
+IMPORT_FILES = $(patsubst %, $(BUILD_PATH)/$(OUT_PREFIX).%.import, $(TEST_FILE_STEMS))
+IMPORT_PASS_FILES = $(patsubst %, %.pass, $(IMPORT_FILES))
+IMPORT_FAIL_FILES = $(patsubst %, %.fail, $(IMPORT_FILES))
+TEST_SH := $(SCRIPT_PATH)/test.sh
+
+$(BUILD_PATH)/$(OUT_PREFIX).%.import.pass : $(BINARY) $(TEST_PATH)/%.import.test-gold
+	-$(TEST_SH) $(BINARY) \
+			--xml \
+			$(INPUT_MODE) \
+			$(TEST_PATH)/$*.import.test-gold \
+			$(TEST_PATH)/$*.import.test-gold \
+			$(BUILD_PATH)/$(OUT_PREFIX).$*.import
+
+.PHONY : import
+import : $(IMPORT_PASS_FILES)
+
+.PHONY : clean_import
+clean_import :
+	-rm $(IMPORT_PASS_FILES) $(IMPORT_FAIL_FILES)
 
 #==================
 # pure
@@ -203,4 +203,4 @@ clean_xml :
 #==================
 
 .PHONY : clean
-clean : clean_test clean_import clean_test_ebnf clean_pure clean_dot clean_xml
+clean : clean_test clean_test_ebnf clean_import clean_pure clean_dot clean_xml

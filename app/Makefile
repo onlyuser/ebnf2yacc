@@ -163,22 +163,6 @@ clean_test : clean_test_ebnf
 			YACC_NIEMANN_SUITE=1
 
 #==================
-# import
-#==================
-
-.PHONY : import
-import : $(BINARY)
-	cd $(TEST_PATH); $(MAKE) $@ \
-			BUILD_PATH=$(abspath $(BUILD_PATH)) BINARY=$(abspath $(BINARY)) INPUT_MODE="xml" \
-			YACC_NIEMANN_SUITE=1
-
-.PHONY : clean_import
-clean_import :
-	cd $(TEST_PATH); $(MAKE) $@ \
-			BUILD_PATH=$(abspath $(BUILD_PATH)) \
-			YACC_NIEMANN_SUITE=1
-
-#==================
 # test_ebnf
 #==================
 
@@ -193,6 +177,22 @@ clean_test_ebnf :
 	cd $(TEST_PATH); $(MAKE) $@ \
 			BUILD_PATH=$(abspath $(BUILD_PATH)) \
 			YACC_EBNF_SUITE=1
+
+#==================
+# import
+#==================
+
+.PHONY : import
+import : $(BINARY)
+	cd $(TEST_PATH); $(MAKE) $@ \
+			BUILD_PATH=$(abspath $(BUILD_PATH)) BINARY=$(abspath $(BINARY)) INPUT_MODE="xml" \
+			YACC_NIEMANN_SUITE=1
+
+.PHONY : clean_import
+clean_import :
+	cd $(TEST_PATH); $(MAKE) $@ \
+			BUILD_PATH=$(abspath $(BUILD_PATH)) \
+			YACC_NIEMANN_SUITE=1
 
 #==================
 # pure
