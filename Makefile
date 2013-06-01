@@ -75,7 +75,7 @@ doc :
 
 .PHONY : clean
 clean :
-	@for i in $(SUBPATHS); do \
+	@for i in $(SUBPATHS_EX); do \
 	echo "make $@ in $$i..."; \
 	(cd $$i; $(MAKE) $@); done
 	cd lib-xlang; $(MAKE) clean
