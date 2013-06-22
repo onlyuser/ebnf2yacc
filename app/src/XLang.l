@@ -86,7 +86,7 @@ decl        [%][^%{}]
 
 "//"                   { yy_push_state(ST_COMMENT_LINE); }
 <ST_COMMENT_LINE>"\n"  { yy_pop_state(); }
-<ST_COMMENT_LINE>{any} ;
+<ST_COMMENT_LINE>.     ;
 
  /*==========================================================================*/
  /* QUOTES */
