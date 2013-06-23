@@ -493,7 +493,7 @@ void add_signal_handlers()
     xl::system::add_sighandler(SIGFPE,  xl::system::backtrace_sighandler);
     xl::system::add_sighandler(SIGBUS,  xl::system::backtrace_sighandler);
     xl::system::add_sighandler(SIGILL,  xl::system::backtrace_sighandler);
-} 
+}
 
 int main(int argc, char** argv)
 {
