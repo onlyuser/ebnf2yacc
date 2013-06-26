@@ -84,28 +84,36 @@ decl        [%][^%{}]
 <ST_COMMENT_BLOCK>"*/"  { yy_pop_state(); }
 <ST_COMMENT_BLOCK>{any} ;
 
-"//"                   { yy_push_state(ST_COMMENT_LINE); }
-<ST_COMMENT_LINE>"\n"  { yy_pop_state(); }
-<ST_COMMENT_LINE>.     ;
+"//"                  { yy_push_state(ST_COMMENT_LINE); }
+<ST_COMMENT_LINE>"\n" { yy_pop_state(); }
+<ST_COMMENT_LINE>.    ;
 
  /*==========================================================================*/
  /* QUOTES */
 
-[\"]              { yy_push_state(ST_STRING); }
+[\"]        {
+                yy_push_state(ST_STRING);
+            }
 <ST_STRING>[^\"]* {
                 _XLANG_lval.string_value = tree_context()->alloc_string(
                         xl::unescape(yytext)
                         );
                 return ID_STRING;
             }
-<ST_STRING>[\"] { yy_pop_state(); }
+<ST_STRING>[\"] {
+                yy_pop_state();
+            }
 
-[\']            { yy_push_state(ST_CHAR); }
+[\']        {
+                yy_push_state(ST_CHAR);
+            }
 <ST_CHAR>[^\']* {
                 _XLANG_lval.char_value = xl::unescape(yytext)[0];
                 return ID_CHAR;
             }
-<ST_CHAR>[\'] { yy_pop_state(); }
+<ST_CHAR>[\'] {
+                yy_pop_state();
+            }
 
  /*==========================================================================*/
  /* DEFINITIONS SECTION */
