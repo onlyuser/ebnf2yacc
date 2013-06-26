@@ -59,19 +59,19 @@ void reset_ss(std::stringstream &ss)
 %x ST_UNION_BLOCK ST_PROTO_BLOCK ST_ACTION_BLOCK ST_CODE
 %s ST_RULES
 
-ws          [ \t\n]+
-any         .|[\n]
-lit_initial [<>=]
-lit_rules   [:|()+*?;]
-digit       [0-9]
-alpha       [a-zA-Z]
-id          {alpha}|[_]
-ident       {id}+({digit}|{id})*
-ident_dash  {id}+({digit}|{id}|[-])*
-ident_fqn   {id}+({digit}|{id}|[:<>,*])*
-_int        {digit}+
-_float      {digit}*[.]{digit}+
-decl        [%][^%{}]
+ws             [ \t\n]+
+any            .|[\n]
+lit_char_init  [<>=]
+lit_char_rules [:|()+*?;]
+digit          [0-9]
+alpha          [a-zA-Z]
+id             {alpha}|[_]
+lit_ident      {id}+({digit}|{id})*
+lit_ident_dash {id}+({digit}|{id}|[-])*
+lit_ident_fqn  {id}+({digit}|{id}|[:<>,*])*
+lit_int        {digit}+
+lit_float      {digit}*[.]{digit}+
+decl           [%][^%{}]
 
 %%
 
@@ -80,13 +80,21 @@ decl        [%][^%{}]
  /*==========================================================================*/
  /* COMMENTS */
 
-"/*"                    { yy_push_state(ST_COMMENT_BLOCK); }
-<ST_COMMENT_BLOCK>"*/"  { yy_pop_state(); }
+"/*"        {
+                yy_push_state(ST_COMMENT_BLOCK);
+            }
+<ST_COMMENT_BLOCK>"*/" {
+                yy_pop_state();
+            }
 <ST_COMMENT_BLOCK>{any} ;
 
-"//"                  { yy_push_state(ST_COMMENT_LINE); }
-<ST_COMMENT_LINE>"\n" { yy_pop_state(); }
-<ST_COMMENT_LINE>.    ;
+"//"        {
+                yy_push_state(ST_COMMENT_LINE);
+            }
+<ST_COMMENT_LINE>"\n" {
+                yy_pop_state();
+            }
+<ST_COMMENT_LINE>. ;
 
  /*==========================================================================*/
  /* QUOTES */
@@ -118,18 +126,33 @@ decl        [%][^%{}]
  /*==========================================================================*/
  /* DEFINITIONS SECTION */
 
-<INITIAL>[\{]               { yy_push_state(ST_UNION_BLOCK); return *yytext; }
-<ST_UNION_BLOCK>{ident_fqn} {
+<INITIAL>[\{] {
+                yy_push_state(ST_UNION_BLOCK);
+                return *yytext;
+            }
+<ST_UNION_BLOCK>{lit_ident_fqn} {
                 _XLANG_lval.string_value = tree_context()->alloc_string(yytext);
                 return ID_STRING;
             }
-<ST_UNION_BLOCK>[;]   { return *yytext; }
-<ST_UNION_BLOCK>"/*"  { yy_push_state(ST_COMMENT_BLOCK); }
-<ST_UNION_BLOCK>"//"  { yy_push_state(ST_COMMENT_LINE); }
-<ST_UNION_BLOCK>[\}]  { yy_pop_state(); return *yytext; }
+<ST_UNION_BLOCK>[;] {
+                return *yytext;
+            }
+<ST_UNION_BLOCK>"/*" {
+                yy_push_state(ST_COMMENT_BLOCK);
+            }
+<ST_UNION_BLOCK>"//" {
+                yy_push_state(ST_COMMENT_LINE);
+            }
+<ST_UNION_BLOCK>[\}] {
+                yy_pop_state();
+                return *yytext;
+            }
 <ST_UNION_BLOCK>{any} ;
-<INITIAL>{decl}       { yyless(1); return *yytext; }
-<INITIAL>{ident_dash} {
+<INITIAL>{decl} {
+                yyless(1);
+                return *yytext;
+            }
+<INITIAL>{lit_ident_dash} {
                 _XLANG_lval.ident_value = tree_context()->alloc_unique_string(yytext);
                 return ID_IDENT;
             }
@@ -146,10 +169,17 @@ decl        [%][^%{}]
                     return ID_STRING;
                 }
             }
-<ST_PROTO_BLOCK>{any}  { buf() << yytext; }
-<INITIAL>"%%"          { BEGIN ST_RULES; return ID_FENCE; }
-<INITIAL>{lit_initial} { return *yytext; }
-<INITIAL>{any}         ;
+<ST_PROTO_BLOCK>{any} {
+                buf() << yytext;
+            }
+<INITIAL>"%%" {
+                BEGIN ST_RULES;
+                return ID_FENCE;
+            }
+<INITIAL>{lit_char_init} {
+                return *yytext;
+            }
+<INITIAL>{any} ;
 
  /*==========================================================================*/
  /* RULES SECTION */
@@ -174,8 +204,14 @@ decl        [%][^%{}]
                 else
                     REJECT;
             }
-<ST_ACTION_BLOCK>{any} { buf() << yytext; }
-<ST_RULES>"%%"         { reset_ss(buf()); BEGIN ST_CODE; return ID_FENCE; }
+<ST_ACTION_BLOCK>{any} {
+                buf() << yytext;
+            }
+<ST_RULES>"%%" {
+                reset_ss(buf());
+                BEGIN ST_CODE;
+                return ID_FENCE;
+            }
 
  /*==========================================================================*/
  /* CODE SECTION */
@@ -184,25 +220,29 @@ decl        [%][^%{}]
                 _XLANG_lval.string_value = tree_context()->alloc_string(buf().str());
                 return ID_STRING;
             }
-<ST_CODE>{any} { buf() << yytext; }
+<ST_CODE>{any} {
+                buf() << yytext;
+            }
 
  /*==========================================================================*/
- /* PRIMITIVES */
+ /* LITERALS */
 
-<ST_RULES>{ident}|"%prec" {
+<ST_RULES>{lit_ident}|"%prec" {
                 _XLANG_lval.ident_value = tree_context()->alloc_unique_string(yytext);
                 return ID_IDENT;
             }
-<ST_RULES>{_int} {
+<ST_RULES>{lit_int} {
                 _XLANG_lval.int_value = atoi(yytext);
                 return ID_INT;
             }
-<ST_RULES>{_float} {
+<ST_RULES>{lit_float} {
                 _XLANG_lval.float_value = atof(yytext);
                 return ID_FLOAT;
             }
-<ST_RULES>{lit_rules} { return *yytext; }
-<ST_RULES>{any}       {
+<ST_RULES>{lit_char_rules} {
+                return *yytext;
+            }
+<ST_RULES>{any} {
                 char buf[40];
                 sprintf(buf, "unknown character: \'%c\'\n", *yytext);
                 _XLANG_error(buf);
