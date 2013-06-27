@@ -63,6 +63,7 @@ ws             [ \t\n]+
 any            .|[\n]
 lit_char_init  [<>=]
 lit_char_rules [:|()+*?;]
+lit_char_decl  [%][^%{}]
 digit          [0-9]
 alpha          [a-zA-Z]
 id             {alpha}|[_]
@@ -71,7 +72,6 @@ lit_ident_dash {id}+({digit}|{id}|[-])*
 lit_ident_fqn  {id}+({digit}|{id}|[:<>,*])*
 lit_int        {digit}+
 lit_float      {digit}*[.]{digit}+
-decl           [%][^%{}]
 
 %%
 
@@ -148,14 +148,7 @@ decl           [%][^%{}]
                 return *yytext;
             }
 <ST_UNION_BLOCK>{any} ;
-<INITIAL>{decl} {
-                yyless(1);
-                return *yytext;
-            }
-<INITIAL>{lit_ident_dash} {
-                _XLANG_lval.ident_value = tree_context()->alloc_unique_string(yytext);
-                return ID_IDENT;
-            }
+
 <INITIAL>"%{" {
                 if(TOP_STATE == INITIAL)
                     reset_ss(buf());
@@ -172,12 +165,21 @@ decl           [%][^%{}]
 <ST_PROTO_BLOCK>{any} {
                 buf() << yytext;
             }
+
+<INITIAL>{lit_char_init} {
+                return *yytext;
+            }
+<INITIAL>{lit_char_decl} {
+                yyless(1);
+                return *yytext;
+            }
+<INITIAL>{lit_ident_dash} {
+                _XLANG_lval.ident_value = tree_context()->alloc_unique_string(yytext);
+                return ID_IDENT;
+            }
 <INITIAL>"%%" {
                 BEGIN ST_RULES;
                 return ID_FENCE;
-            }
-<INITIAL>{lit_char_init} {
-                return *yytext;
             }
 <INITIAL>{any} ;
 
@@ -207,6 +209,7 @@ decl           [%][^%{}]
 <ST_ACTION_BLOCK>{any} {
                 buf() << yytext;
             }
+
 <ST_RULES>"%%" {
                 reset_ss(buf());
                 BEGIN ST_CODE;
@@ -231,17 +234,21 @@ decl           [%][^%{}]
                 _XLANG_lval.ident_value = tree_context()->alloc_unique_string(yytext);
                 return ID_IDENT;
             }
+
 <ST_RULES>{lit_int} {
                 _XLANG_lval.int_value = atoi(yytext);
                 return ID_INT;
             }
+
 <ST_RULES>{lit_float} {
                 _XLANG_lval.float_value = atof(yytext);
                 return ID_FLOAT;
             }
+
 <ST_RULES>{lit_char_rules} {
                 return *yytext;
             }
+
 <ST_RULES>{any} {
                 char buf[40];
                 sprintf(buf, "unknown character: \'%c\'\n", *yytext);
