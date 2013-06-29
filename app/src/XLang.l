@@ -59,19 +59,19 @@ void reset_ss(std::stringstream &ss)
 %x ST_UNION_BLOCK ST_PROTO_BLOCK ST_ACTION_BLOCK ST_CODE
 %s ST_RULES
 
-ws             [ \t\n]+
-any            .|[\n]
-lit_char_init  [<>=]
-lit_char_rules [:|()+*?;]
-lit_char_decl  [%][^%{}]
-digit          [0-9]
-alpha          [a-zA-Z]
-id             {alpha}|[_]
-lit_ident      {id}+({digit}|{id})*
-lit_ident_dash {id}+({digit}|{id}|[-])*
-lit_ident_fqn  {id}+({digit}|{id}|[:<>,*])*
-lit_int        {digit}+
-lit_float      {digit}*[.]{digit}+
+ws               [ \t\n]+
+any              .|[\n]
+lit_char_def     [<>=]
+lit_char_rules   [:|()+*?;]
+lit_char_percent [%][^%{}]
+digit            [0-9]
+alpha            [a-zA-Z]
+id               {alpha}|[_]
+lit_ident        {id}+({digit}|{id})*
+lit_ident_def    {id}+({digit}|{id}|[-])*
+lit_ident_c      {id}+({digit}|{id}|[:<>,*])*
+lit_int          {digit}+
+lit_float        {digit}*[.]{digit}+
 
 %%
 
@@ -130,7 +130,7 @@ lit_float      {digit}*[.]{digit}+
                 yy_push_state(ST_UNION_BLOCK);
                 return *yytext;
             }
-<ST_UNION_BLOCK>{lit_ident_fqn} {
+<ST_UNION_BLOCK>{lit_ident_c} {
                 _XLANG_lval.string_value = tree_context()->alloc_string(yytext);
                 return ID_STRING;
             }
@@ -166,14 +166,14 @@ lit_float      {digit}*[.]{digit}+
                 buf() << yytext;
             }
 
-<INITIAL>{lit_char_init} {
+<INITIAL>{lit_char_def} {
                 return *yytext;
             }
-<INITIAL>{lit_char_decl} {
+<INITIAL>{lit_char_percent} {
                 yyless(1);
                 return *yytext;
             }
-<INITIAL>{lit_ident_dash} {
+<INITIAL>{lit_ident_def} {
                 _XLANG_lval.ident_value = tree_context()->alloc_unique_string(yytext);
                 return ID_IDENT;
             }
