@@ -219,12 +219,12 @@ lit_float        {digit}*[.]{digit}+
  /*==========================================================================*/
  /* CODE SECTION */
 
+<ST_CODE>{any} {
+                buf() << yytext;
+            }
 <ST_CODE><<EOF>> {
                 _XLANG_lval.string_value = tree_context()->alloc_string(buf().str());
                 return ID_STRING;
-            }
-<ST_CODE>{any} {
-                buf() << yytext;
             }
 
  /*==========================================================================*/
