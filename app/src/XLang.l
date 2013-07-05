@@ -35,8 +35,9 @@ std::stringstream &buf()
     static std::stringstream _buf;
     return _buf;
 }
-void reset_ss(std::stringstream &ss)
+void reset_buf()
 {
+    std::stringstream &ss = buf();
     ss.str("");
     ss.clear();
 }
@@ -151,7 +152,7 @@ lit_float        {digit}*[.]{digit}+
 
 <INITIAL>"%{" {
                 if(TOP_STATE == INITIAL)
-                    reset_ss(buf());
+                    reset_buf();
                 yy_push_state(ST_PROTO_BLOCK);
             }
 <ST_PROTO_BLOCK>"%}" {
@@ -188,13 +189,12 @@ lit_float        {digit}*[.]{digit}+
 
 <ST_RULES>[\{] {
                 if(TOP_STATE == INITIAL)
-                    reset_ss(buf());
+                    reset_buf();
                 yy_push_state(ST_ACTION_BLOCK);
             }
 <ST_ACTION_BLOCK>[\{] {
                 yy_push_state(ST_ACTION_BLOCK);
-                if(TOP_STATE != INITIAL)
-                    REJECT;
+                REJECT; // fall-through to {any} handler
             }
 <ST_ACTION_BLOCK>[\}] {
                 yy_pop_state();
@@ -204,14 +204,14 @@ lit_float        {digit}*[.]{digit}+
                     return ID_STRING;
                 }
                 else
-                    REJECT;
+                    REJECT; // fall-through to {any} handler
             }
 <ST_ACTION_BLOCK>{any} {
                 buf() << yytext;
             }
 
 <ST_RULES>"%%" {
-                reset_ss(buf());
+                reset_buf();
                 BEGIN ST_CODE;
                 return ID_FENCE;
             }
