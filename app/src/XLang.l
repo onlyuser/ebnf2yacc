@@ -52,6 +52,9 @@ void reset_buf()
         ((yy_start_stack_ptr>1) ? yy_pop_state() : NO_OP()), \
         yy_top_state())
 
+#define PUSH_STATE yy_push_state
+#define POP_STATE  yy_pop_state
+
 %}
 
 %option noyywrap nounput
@@ -82,18 +85,18 @@ lit_float        {digit}*[.]{digit}+
  /* COMMENTS */
 
 "/*"        {
-                yy_push_state(ST_COMMENT_BLOCK);
+                PUSH_STATE(ST_COMMENT_BLOCK);
             }
 <ST_COMMENT_BLOCK>"*/" {
-                yy_pop_state();
+                POP_STATE();
             }
 <ST_COMMENT_BLOCK>{any} ;
 
 "//"        {
-                yy_push_state(ST_COMMENT_LINE);
+                PUSH_STATE(ST_COMMENT_LINE);
             }
 <ST_COMMENT_LINE>"\n" {
-                yy_pop_state();
+                POP_STATE();
             }
 <ST_COMMENT_LINE>. ;
 
@@ -101,7 +104,7 @@ lit_float        {digit}*[.]{digit}+
  /* QUOTES */
 
 [\"]        {
-                yy_push_state(ST_STRING);
+                PUSH_STATE(ST_STRING);
             }
 <ST_STRING>[^\"]* {
                 _XLANG_lval.string_value = tree_context()->alloc_string(
@@ -110,25 +113,25 @@ lit_float        {digit}*[.]{digit}+
                 return ID_STRING;
             }
 <ST_STRING>[\"] {
-                yy_pop_state();
+                POP_STATE();
             }
 
 [\']        {
-                yy_push_state(ST_CHAR);
+                PUSH_STATE(ST_CHAR);
             }
 <ST_CHAR>[^\']* {
                 _XLANG_lval.char_value = xl::unescape(yytext)[0];
                 return ID_CHAR;
             }
 <ST_CHAR>[\'] {
-                yy_pop_state();
+                POP_STATE();
             }
 
  /*==========================================================================*/
  /* DEFINITIONS SECTION */
 
 <INITIAL>[\{] {
-                yy_push_state(ST_UNION_BLOCK);
+                PUSH_STATE(ST_UNION_BLOCK);
                 return *yytext;
             }
 <ST_UNION_BLOCK>{lit_ident_c} {
@@ -139,13 +142,13 @@ lit_float        {digit}*[.]{digit}+
                 return *yytext;
             }
 <ST_UNION_BLOCK>"/*" {
-                yy_push_state(ST_COMMENT_BLOCK);
+                PUSH_STATE(ST_COMMENT_BLOCK);
             }
 <ST_UNION_BLOCK>"//" {
-                yy_push_state(ST_COMMENT_LINE);
+                PUSH_STATE(ST_COMMENT_LINE);
             }
 <ST_UNION_BLOCK>[\}] {
-                yy_pop_state();
+                POP_STATE();
                 return *yytext;
             }
 <ST_UNION_BLOCK>{any} ;
@@ -153,10 +156,10 @@ lit_float        {digit}*[.]{digit}+
 <INITIAL>"%{" {
                 if(TOP_STATE == INITIAL)
                     reset_buf();
-                yy_push_state(ST_PROTO_BLOCK);
+                PUSH_STATE(ST_PROTO_BLOCK);
             }
 <ST_PROTO_BLOCK>"%}" {
-                yy_pop_state();
+                POP_STATE();
                 if(TOP_STATE == INITIAL)
                 {
                     _XLANG_lval.string_value = tree_context()->alloc_string(buf().str());
@@ -190,14 +193,14 @@ lit_float        {digit}*[.]{digit}+
 <ST_RULES>[\{] {
                 if(TOP_STATE == INITIAL)
                     reset_buf();
-                yy_push_state(ST_ACTION_BLOCK);
+                PUSH_STATE(ST_ACTION_BLOCK);
             }
 <ST_ACTION_BLOCK>[\{] {
-                yy_push_state(ST_ACTION_BLOCK);
+                PUSH_STATE(ST_ACTION_BLOCK);
                 REJECT; // fall-through to {any} handler
             }
 <ST_ACTION_BLOCK>[\}] {
-                yy_pop_state();
+                POP_STATE();
                 if(TOP_STATE == INITIAL)
                 {
                     _XLANG_lval.string_value = tree_context()->alloc_string(buf().str());
