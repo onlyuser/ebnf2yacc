@@ -53,7 +53,7 @@ void reset_buf()
         yy_top_state())
 
 #define PUSH_STATE   yy_push_state
-#define POP_STATE    yy_pop_state
+#define POP_STATE    yy_pop_state()
 #define LVAL         _XLANG_lval
 #define TREE_CONTEXT (*tree_context())
 
@@ -90,7 +90,7 @@ lit_float        {digit}*[.]{digit}+
                 PUSH_STATE(ST_COMMENT_BLOCK);
             }
 <ST_COMMENT_BLOCK>"*/" {
-                POP_STATE();
+                POP_STATE;
             }
 <ST_COMMENT_BLOCK>{any} ;
 
@@ -98,7 +98,7 @@ lit_float        {digit}*[.]{digit}+
                 PUSH_STATE(ST_COMMENT_LINE);
             }
 <ST_COMMENT_LINE>"\n" {
-                POP_STATE();
+                POP_STATE;
             }
 <ST_COMMENT_LINE>. ;
 
@@ -113,7 +113,7 @@ lit_float        {digit}*[.]{digit}+
                 return ID_STRING;
             }
 <ST_STRING>[\"] {
-                POP_STATE();
+                POP_STATE;
             }
 
 [\']        {
@@ -124,7 +124,7 @@ lit_float        {digit}*[.]{digit}+
                 return ID_CHAR;
             }
 <ST_CHAR>[\'] {
-                POP_STATE();
+                POP_STATE;
             }
 
  /*==========================================================================*/
@@ -148,7 +148,7 @@ lit_float        {digit}*[.]{digit}+
                 PUSH_STATE(ST_COMMENT_LINE);
             }
 <ST_UNION_BLOCK>[\}] {
-                POP_STATE();
+                POP_STATE;
                 return *yytext;
             }
 <ST_UNION_BLOCK>{any} ;
@@ -159,7 +159,7 @@ lit_float        {digit}*[.]{digit}+
                 PUSH_STATE(ST_PROTO_BLOCK);
             }
 <ST_PROTO_BLOCK>"%}" {
-                POP_STATE();
+                POP_STATE;
                 if(TOP_STATE == INITIAL)
                 {
                     LVAL.string_value = TREE_CONTEXT.alloc_string(buf().str());
@@ -200,7 +200,7 @@ lit_float        {digit}*[.]{digit}+
                 REJECT; // fall-through to {any} handler
             }
 <ST_ACTION_BLOCK>[\}] {
-                POP_STATE();
+                POP_STATE;
                 if(TOP_STATE == INITIAL)
                 {
                     LVAL.string_value = TREE_CONTEXT.alloc_string(buf().str());
