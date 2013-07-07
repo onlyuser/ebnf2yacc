@@ -52,8 +52,10 @@ void reset_buf()
         ((yy_start_stack_ptr>1) ? yy_pop_state() : NO_OP()), \
         yy_top_state())
 
-#define PUSH_STATE yy_push_state
-#define POP_STATE  yy_pop_state
+#define PUSH_STATE   yy_push_state
+#define POP_STATE    yy_pop_state
+#define LVAL         _XLANG_lval
+#define TREE_CONTEXT (*tree_context())
 
 %}
 
@@ -107,9 +109,7 @@ lit_float        {digit}*[.]{digit}+
                 PUSH_STATE(ST_STRING);
             }
 <ST_STRING>[^\"]* {
-                _XLANG_lval.string_value = tree_context()->alloc_string(
-                        xl::unescape(yytext)
-                        );
+                LVAL.string_value = TREE_CONTEXT.alloc_string(xl::unescape(yytext));
                 return ID_STRING;
             }
 <ST_STRING>[\"] {
@@ -120,7 +120,7 @@ lit_float        {digit}*[.]{digit}+
                 PUSH_STATE(ST_CHAR);
             }
 <ST_CHAR>[^\']* {
-                _XLANG_lval.char_value = xl::unescape(yytext)[0];
+                LVAL.char_value = xl::unescape(yytext)[0];
                 return ID_CHAR;
             }
 <ST_CHAR>[\'] {
@@ -135,7 +135,7 @@ lit_float        {digit}*[.]{digit}+
                 return *yytext;
             }
 <ST_UNION_BLOCK>{lit_ident_c} {
-                _XLANG_lval.string_value = tree_context()->alloc_string(yytext);
+                LVAL.string_value = TREE_CONTEXT.alloc_string(yytext);
                 return ID_STRING;
             }
 <ST_UNION_BLOCK>[;] {
@@ -162,7 +162,7 @@ lit_float        {digit}*[.]{digit}+
                 POP_STATE();
                 if(TOP_STATE == INITIAL)
                 {
-                    _XLANG_lval.string_value = tree_context()->alloc_string(buf().str());
+                    LVAL.string_value = TREE_CONTEXT.alloc_string(buf().str());
                     return ID_STRING;
                 }
             }
@@ -178,7 +178,7 @@ lit_float        {digit}*[.]{digit}+
                 return *yytext;
             }
 <INITIAL>{lit_ident_def} {
-                _XLANG_lval.ident_value = tree_context()->alloc_unique_string(yytext);
+                LVAL.ident_value = TREE_CONTEXT.alloc_unique_string(yytext);
                 return ID_IDENT;
             }
 <INITIAL>"%%" {
@@ -203,7 +203,7 @@ lit_float        {digit}*[.]{digit}+
                 POP_STATE();
                 if(TOP_STATE == INITIAL)
                 {
-                    _XLANG_lval.string_value = tree_context()->alloc_string(buf().str());
+                    LVAL.string_value = TREE_CONTEXT.alloc_string(buf().str());
                     return ID_STRING;
                 }
                 else
@@ -226,7 +226,7 @@ lit_float        {digit}*[.]{digit}+
                 buf() << yytext;
             }
 <ST_CODE><<EOF>> {
-                _XLANG_lval.string_value = tree_context()->alloc_string(buf().str());
+                LVAL.string_value = TREE_CONTEXT.alloc_string(buf().str());
                 return ID_STRING;
             }
 
@@ -234,17 +234,17 @@ lit_float        {digit}*[.]{digit}+
  /* LITERALS */
 
 <ST_RULES>{lit_ident}|"%prec" {
-                _XLANG_lval.ident_value = tree_context()->alloc_unique_string(yytext);
+                LVAL.ident_value = TREE_CONTEXT.alloc_unique_string(yytext);
                 return ID_IDENT;
             }
 
 <ST_RULES>{lit_int} {
-                _XLANG_lval.int_value = atoi(yytext);
+                LVAL.int_value = atoi(yytext);
                 return ID_INT;
             }
 
 <ST_RULES>{lit_float} {
-                _XLANG_lval.float_value = atof(yytext);
+                LVAL.float_value = atof(yytext);
                 return ID_FLOAT;
             }
 
