@@ -34,6 +34,7 @@
 #define ERROR_LEXER_ID_NOT_FOUND        "missing lexer id handler, most likely you forgot to register one"
 #define ERROR_KLEENE_NODE_WITHOUT_PAREN "kleene node without paren"
 #define ERROR_MISSING_UNION_BLOCK       "missing union block"
+#define LOC                             dummy_loc
 
 //#define DEBUG_EBNF
 #ifdef DEBUG_EBNF
@@ -59,6 +60,8 @@
         return false;
     }
 #endif
+
+static YYLTYPE dummy_loc = {};
 
 #define MAKE_TERM(lexer_id, ...) xl::mvc::MVCModel::make_term(tc, lexer_id, ##__VA_ARGS__)
 #if 0 // NOTE: macro recursion not allowed
@@ -345,8 +348,8 @@ static xl::node::NodeIdentIFace* make_action_node(
     //    <term type="string" value=" __AAA__ "/>
     //</symbol>
 
-    return MAKE_SYMBOL(tc, ID_RULE_ACTION_BLOCK, 1,
-            MAKE_TERM(ID_STRING, tc->alloc_string(action))
+    return MAKE_SYMBOL(tc, ID_RULE_ACTION_BLOCK, LOC, 1,
+            MAKE_TERM(ID_STRING, LOC, tc->alloc_string(action))
             );
 }
 
@@ -520,7 +523,7 @@ static xl::node::NodeIdentIFace* make_stem_rule(
         }
     }
     xl::node::NodeIdentIFace* replacement_node =
-            MAKE_TERM(ID_IDENT, tc->alloc_unique_string(rule_name_recursive));
+            MAKE_TERM(ID_IDENT, LOC, tc->alloc_unique_string(rule_name_recursive));
     replace_node(_find_node_clone, replacement_node);
     return rule_node_clone;
 }
@@ -564,27 +567,27 @@ static xl::node::NodeIdentIFace* make_recursive_rule_plus(
     //    </symbol>
     //</symbol>
 
-    return MAKE_SYMBOL(tc, ID_RULE, 2,
-            MAKE_TERM(ID_IDENT, tc->alloc_unique_string(rule_name_recursive)),
-            MAKE_SYMBOL(tc, ID_RULE_ALTS, 2,
-                    MAKE_SYMBOL(tc, ID_RULE_ALT, 2,
-                            MAKE_SYMBOL(tc, ID_RULE_TERMS, 1,
-                                    MAKE_TERM(ID_IDENT, tc->alloc_unique_string(rule_name_term))
+    return MAKE_SYMBOL(tc, ID_RULE, LOC, 2,
+            MAKE_TERM(ID_IDENT, LOC, tc->alloc_unique_string(rule_name_recursive)),
+            MAKE_SYMBOL(tc, ID_RULE_ALTS, LOC, 2,
+                    MAKE_SYMBOL(tc, ID_RULE_ALT, LOC, 2,
+                            MAKE_SYMBOL(tc, ID_RULE_TERMS, LOC, 1,
+                                    MAKE_TERM(ID_IDENT, LOC, tc->alloc_unique_string(rule_name_term))
                                     ),
-                            MAKE_SYMBOL(tc, ID_RULE_ACTION_BLOCK, 1,
-                                    MAKE_TERM(ID_STRING,
+                            MAKE_SYMBOL(tc, ID_RULE_ACTION_BLOCK, LOC, 1,
+                                    MAKE_TERM(ID_STRING, LOC,
                                             tc->alloc_string(" $$ = new " + gen_type(rule_name_recursive) +
                                                     "; $$->push_back(*$1); delete $1; ")
                                             )
                                     )
                             ),
-                    MAKE_SYMBOL(tc, ID_RULE_ALT, 2,
-                            MAKE_SYMBOL(tc, ID_RULE_TERMS, 2,
-                                    MAKE_TERM(ID_IDENT, tc->alloc_unique_string(rule_name_recursive)),
-                                    MAKE_TERM(ID_IDENT, tc->alloc_unique_string(rule_name_term))
+                    MAKE_SYMBOL(tc, ID_RULE_ALT, LOC, 2,
+                            MAKE_SYMBOL(tc, ID_RULE_TERMS, LOC, 2,
+                                    MAKE_TERM(ID_IDENT, LOC, tc->alloc_unique_string(rule_name_recursive)),
+                                    MAKE_TERM(ID_IDENT, LOC, tc->alloc_unique_string(rule_name_term))
                                     ),
-                            MAKE_SYMBOL(tc, ID_RULE_ACTION_BLOCK, 1,
-                                    MAKE_TERM(ID_STRING,
+                            MAKE_SYMBOL(tc, ID_RULE_ACTION_BLOCK, LOC, 1,
+                                    MAKE_TERM(ID_STRING, LOC,
                                             tc->alloc_string(" $1->push_back(*$2); delete $2; $$ = $1; ")
                                             )
                                     )
@@ -630,23 +633,23 @@ static xl::node::NodeIdentIFace* make_recursive_rule_star(
     //    </symbol>
     //</symbol>
 
-    return MAKE_SYMBOL(tc, ID_RULE, 2,
-            MAKE_TERM(ID_IDENT, tc->alloc_unique_string(rule_name_recursive)),
-            MAKE_SYMBOL(tc, ID_RULE_ALTS, 2,
-                    MAKE_SYMBOL(tc, ID_RULE_ALT, 1,
-                            MAKE_SYMBOL(tc, ID_RULE_ACTION_BLOCK, 1,
-                                    MAKE_TERM(ID_STRING,
+    return MAKE_SYMBOL(tc, ID_RULE, LOC, 2,
+            MAKE_TERM(ID_IDENT, LOC, tc->alloc_unique_string(rule_name_recursive)),
+            MAKE_SYMBOL(tc, ID_RULE_ALTS, LOC, 2,
+                    MAKE_SYMBOL(tc, ID_RULE_ALT, LOC, 1,
+                            MAKE_SYMBOL(tc, ID_RULE_ACTION_BLOCK, LOC, 1,
+                                    MAKE_TERM(ID_STRING, LOC,
                                             tc->alloc_string(" $$ = new " + gen_type(rule_name_recursive) + "; ")
                                             )
                                     )
                             ),
-                    MAKE_SYMBOL(tc, ID_RULE_ALT, 2,
-                            MAKE_SYMBOL(tc, ID_RULE_TERMS, 2,
-                                    MAKE_TERM(ID_IDENT, tc->alloc_unique_string(rule_name_recursive)),
-                                    MAKE_TERM(ID_IDENT, tc->alloc_unique_string(rule_name_term))
+                    MAKE_SYMBOL(tc, ID_RULE_ALT, LOC, 2,
+                            MAKE_SYMBOL(tc, ID_RULE_TERMS, LOC, 2,
+                                    MAKE_TERM(ID_IDENT, LOC, tc->alloc_unique_string(rule_name_recursive)),
+                                    MAKE_TERM(ID_IDENT, LOC, tc->alloc_unique_string(rule_name_term))
                                     ),
-                            MAKE_SYMBOL(tc, ID_RULE_ACTION_BLOCK, 1,
-                                    MAKE_TERM(ID_STRING,
+                            MAKE_SYMBOL(tc, ID_RULE_ACTION_BLOCK, LOC, 1,
+                                    MAKE_TERM(ID_STRING, LOC,
                                             tc->alloc_string(" $1->push_back(*$2); delete $2; $$ = $1; ")
                                             )
                                     )
@@ -691,20 +694,20 @@ static xl::node::NodeIdentIFace* make_recursive_rule_optional(
     //    </symbol>
     //</symbol>
 
-    return MAKE_SYMBOL(tc, ID_RULE, 2,
-            MAKE_TERM(ID_IDENT, tc->alloc_unique_string(rule_name_optional)),
-            MAKE_SYMBOL(tc, ID_RULE_ALTS, 2,
-                    MAKE_SYMBOL(tc, ID_RULE_ALT, 1,
-                            MAKE_SYMBOL(tc, ID_RULE_ACTION_BLOCK, 1,
-                                    MAKE_TERM(ID_STRING, tc->alloc_string(" $$ = NULL; "))
+    return MAKE_SYMBOL(tc, ID_RULE, LOC, 2,
+            MAKE_TERM(ID_IDENT, LOC, tc->alloc_unique_string(rule_name_optional)),
+            MAKE_SYMBOL(tc, ID_RULE_ALTS, LOC, 2,
+                    MAKE_SYMBOL(tc, ID_RULE_ALT, LOC, 1,
+                            MAKE_SYMBOL(tc, ID_RULE_ACTION_BLOCK, LOC, 1,
+                                    MAKE_TERM(ID_STRING, LOC, tc->alloc_string(" $$ = NULL; "))
                                     )
                             ),
-                    MAKE_SYMBOL(tc, ID_RULE_ALT, 2,
-                            MAKE_SYMBOL(tc, ID_RULE_TERMS, 1,
-                                    MAKE_TERM(ID_IDENT, tc->alloc_unique_string(rule_name_term))
+                    MAKE_SYMBOL(tc, ID_RULE_ALT, LOC, 2,
+                            MAKE_SYMBOL(tc, ID_RULE_TERMS, LOC, 1,
+                                    MAKE_TERM(ID_IDENT, LOC, tc->alloc_unique_string(rule_name_term))
                                     ),
-                            MAKE_SYMBOL(tc, ID_RULE_ACTION_BLOCK, 1,
-                                    MAKE_TERM(ID_STRING, tc->alloc_string(" $$ = $1; "))
+                            MAKE_SYMBOL(tc, ID_RULE_ACTION_BLOCK, LOC, 1,
+                                    MAKE_TERM(ID_STRING, LOC, tc->alloc_string(" $$ = $1; "))
                                     )
                             )
                     )
@@ -735,14 +738,14 @@ static xl::node::NodeIdentIFace* make_paren_node(
     //    </symbol>
     //</symbol>
 
-    return MAKE_SYMBOL(tc, '(', 1,
-            MAKE_SYMBOL(tc, ID_RULE_ALTS, 1,
-                    MAKE_SYMBOL(tc, ID_RULE_ALT, 2,
-                            MAKE_SYMBOL(tc, ID_RULE_TERMS, 1,
+    return MAKE_SYMBOL(tc, '(', LOC, 1,
+            MAKE_SYMBOL(tc, ID_RULE_ALTS, LOC, 1,
+                    MAKE_SYMBOL(tc, ID_RULE_ALT, LOC, 2,
+                            MAKE_SYMBOL(tc, ID_RULE_TERMS, LOC, 1,
                                     _node->clone(tc)
                                     ),
-                            MAKE_SYMBOL(tc, ID_RULE_ACTION_BLOCK, 1,
-                                    MAKE_TERM(ID_STRING, tc->alloc_string(""))
+                            MAKE_SYMBOL(tc, ID_RULE_ACTION_BLOCK, LOC, 1,
+                                    MAKE_TERM(ID_STRING, LOC, tc->alloc_string(""))
                                     )
                             )
                     )
@@ -768,10 +771,10 @@ static xl::node::NodeIdentIFace* make_union_block_definition_node(
     //    </symbol>
     //</symbol>
 
-    return MAKE_SYMBOL(tc, ID_DEFINITION, 2,
-            MAKE_TERM(ID_IDENT, tc->alloc_unique_string("union")),
-            MAKE_SYMBOL(tc, ID_UNION_BLOCK, 1,
-                    MAKE_SYMBOL(tc, ID_UNION_MEMBERS, 0)
+    return MAKE_SYMBOL(tc, ID_DEFINITION, LOC, 2,
+            MAKE_TERM(ID_IDENT, LOC, tc->alloc_unique_string("union")),
+            MAKE_SYMBOL(tc, ID_UNION_BLOCK, LOC, 1,
+                    MAKE_SYMBOL(tc, ID_UNION_MEMBERS, LOC, 0)
                     )
             );
 }
@@ -885,8 +888,8 @@ static xl::node::NodeIdentIFace* make_term_rule(
             *action_string_ptr = new_action; // TODO: fix-me!
         }
     }
-    return MAKE_SYMBOL(tc, ID_RULE, 2,
-            MAKE_TERM(ID_IDENT, tc->alloc_unique_string(rule_name_term)),
+    return MAKE_SYMBOL(tc, ID_RULE, LOC, 2,
+            MAKE_TERM(ID_IDENT, LOC, tc->alloc_unique_string(rule_name_term)),
             alts_node_clone);
 }
 
@@ -913,13 +916,13 @@ static xl::node::NodeIdentIFace* make_union_member_node(
     //    </symbol>
     //</symbol>
 
-    return MAKE_SYMBOL(tc, ID_UNION_MEMBER, 1,
-            MAKE_SYMBOL(tc, ID_UNION_TERMS, 2,
-                    MAKE_SYMBOL(tc, ID_UNION_TERM, 1,
-                            MAKE_TERM(ID_STRING, tc->alloc_string(_type + "*"))
+    return MAKE_SYMBOL(tc, ID_UNION_MEMBER, LOC, 1,
+            MAKE_SYMBOL(tc, ID_UNION_TERMS, LOC, 2,
+                    MAKE_SYMBOL(tc, ID_UNION_TERM, LOC, 1,
+                            MAKE_TERM(ID_STRING, LOC, tc->alloc_string(_type + "*"))
                             ),
-                    MAKE_SYMBOL(tc, ID_UNION_TERM, 1,
-                            MAKE_TERM(ID_STRING, tc->alloc_string(_typename))
+                    MAKE_SYMBOL(tc, ID_UNION_TERM, LOC, 1,
+                            MAKE_TERM(ID_STRING, LOC, tc->alloc_string(_typename))
                             )
                     )
             );
@@ -955,12 +958,12 @@ static xl::node::NodeIdentIFace* make_def_brace_node(
         if((p+1) != token_vec->end())
             exploded_tokens.append(", ");
     }
-    return MAKE_SYMBOL(tc, ID_DEF_BRACE, 3,
-            MAKE_TERM(ID_IDENT, tc->alloc_unique_string("type")),
-            MAKE_TERM(ID_IDENT, tc->alloc_unique_string(_typename)),
-            MAKE_SYMBOL(tc, ID_DEF_SYMBOLS, 1,
-                    MAKE_SYMBOL(tc, ID_DEF_SYMBOL, 1,
-                            MAKE_TERM(ID_IDENT, tc->alloc_unique_string(exploded_tokens))
+    return MAKE_SYMBOL(tc, ID_DEF_BRACE, LOC, 3,
+            MAKE_TERM(ID_IDENT, LOC, tc->alloc_unique_string("type")),
+            MAKE_TERM(ID_IDENT, LOC, tc->alloc_unique_string(_typename)),
+            MAKE_SYMBOL(tc, ID_DEF_SYMBOLS, LOC, 1,
+                    MAKE_SYMBOL(tc, ID_DEF_SYMBOL, LOC, 1,
+                            MAKE_TERM(ID_IDENT, LOC, tc->alloc_unique_string(exploded_tokens))
                             )
                     )
             );

@@ -42,20 +42,20 @@ void reset_buf()
     ss.clear();
 }
 
+#define PUSH_STATE   yy_push_state
+#define POP_STATE    yy_pop_state()
+#define LVAL         _XLANG_lval
+#define TREE_CONTEXT (*tree_context())
+
 // does nothing, returns void like yy_pop_state
 #define NO_OP [](){}
 
 // temporary workaround for flex bug: yy_top_state crashes on INITIAL state - ID: 3462982
 // http://sourceforge.net/tracker/?func=detail&aid=3462982&group_id=97492&atid=618177
-#define TOP_STATE (                                          \
-        yy_push_state(INITIAL),                              \
-        ((yy_start_stack_ptr>1) ? yy_pop_state() : NO_OP()), \
+#define TOP_STATE (                                     \
+        PUSH_STATE(INITIAL),                            \
+        ((yy_start_stack_ptr>1) ? POP_STATE : NO_OP()), \
         yy_top_state())
-
-#define PUSH_STATE   yy_push_state
-#define POP_STATE    yy_pop_state()
-#define LVAL         _XLANG_lval
-#define TREE_CONTEXT (*tree_context())
 
 %}
 

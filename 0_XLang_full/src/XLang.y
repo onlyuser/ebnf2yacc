@@ -23,10 +23,13 @@
 #include "XLang.h" // node::NodeIdentIFace
 #include "XLang.tab.h" // ID_XXX (yacc generated)
 #include "XLangAlloc.h" // Allocator
+#include "XLangSystem.h" // system::add_sighandler
 #include "mvc/XLangMVCView.h" // mvc::MVCView
 #include "mvc/XLangMVCModel.h" // mvc::MVCModel
 #include "XLangTreeContext.h" // TreeContext
 #include "XLangType.h" // uint32_t
+#include "TreeRewriter.h" // ebnf_to_bnf
+#include "EBNFPrinter.h" // EBNFPrinter
 #include <stdio.h> // size_t
 #include <stdarg.h> // va_start
 #include <string.h> // strlen
@@ -40,6 +43,7 @@
 #define MAKE_SYMBOL(...)           xl::mvc::MVCModel::make_symbol(&pc->tree_context(), ##__VA_ARGS__)
 #define ERROR_LEXER_ID_NOT_FOUND   "missing lexer id handler, most likely you forgot to register one"
 #define ERROR_LEXER_NAME_NOT_FOUND "missing lexer name handler, most likely you forgot to register one"
+#define EOL                        xl::node::SymbolNode::eol();
 
 // report error
 void _XLANG_error(YYLTYPE* loc, ParserContext* pc, yyscan_t scanner, const char* s)
@@ -90,33 +94,72 @@ std::string id_to_name(uint32_t lexer_id)
         return _id_to_name[index];
     switch(lexer_id)
     {
-        case ID_UMINUS: return "uminus";
-        case '+':       return "+";
-        case '-':       return "-";
-        case '*':       return "*";
-        case '/':       return "/";
-        case '=':       return "=";
-        case ',':       return ",";
+        case ID_GRAMMAR:           return "grammar";
+        case ID_DEFINITIONS:       return "definitions";
+        case ID_DEFINITION:        return "definition";
+        case ID_DEF_EQ:            return "def_eq";
+        case ID_DEF_BRACE:         return "def_brace";
+        case ID_DEF_PROTO_BLOCK:   return "def_proto_block";
+        case ID_UNION_BLOCK:       return "union_block";
+        case ID_UNION_MEMBERS:     return "union_members";
+        case ID_UNION_MEMBER:      return "union_member";
+        case ID_UNION_TERMS:       return "union_terms";
+        case ID_UNION_TERM:        return "union_term";
+        case ID_DEF_SYMBOLS:       return "def_symbols";
+        case ID_DEF_SYMBOL:        return "def_symbol";
+        case ID_RULES:             return "rules";
+        case ID_RULE:              return "rule";
+        case ID_RULE_ALTS:         return "rule_alts";
+        case ID_RULE_ALT:          return "rule_alt";
+        case ID_RULE_ACTION_BLOCK: return "rule_action_block";
+        case ID_RULE_TERMS:        return "rule_terms";
+        case ID_CODE:              return "code";
+        case '+':                  return "+";
+        case '*':                  return "*";
+        case '?':                  return "?";
+        case '(':                  return "(";
     }
     throw ERROR_LEXER_ID_NOT_FOUND;
     return "";
 }
 uint32_t name_to_id(std::string name)
 {
-    if(name == "int")    return ID_INT;
-    if(name == "float")  return ID_FLOAT;
-    if(name == "string") return ID_STRING;
-    if(name == "char")   return ID_CHAR;
-    if(name == "ident")  return ID_IDENT;
-    if(name == "uminus") return ID_UMINUS;
-    if(name == "+")      return '+';
-    if(name == "-")      return '-';
-    if(name == "*")      return '*';
-    if(name == "/")      return '/';
-    if(name == "=")      return '=';
-    if(name == ",")      return ',';
+    if(name == "int")               return ID_INT;
+    if(name == "float")             return ID_FLOAT;
+    if(name == "string")            return ID_STRING;
+    if(name == "char")              return ID_CHAR;
+    if(name == "ident")             return ID_IDENT;
+    if(name == "grammar")           return ID_GRAMMAR;
+    if(name == "definitions")       return ID_DEFINITIONS;
+    if(name == "definition")        return ID_DEFINITION;
+    if(name == "def_eq")            return ID_DEF_EQ;
+    if(name == "def_brace")         return ID_DEF_BRACE;
+    if(name == "def_proto_block")   return ID_DEF_PROTO_BLOCK;
+    if(name == "union_block")       return ID_UNION_BLOCK;
+    if(name == "union_members")     return ID_UNION_MEMBERS;
+    if(name == "union_member")      return ID_UNION_MEMBER;
+    if(name == "union_terms")       return ID_UNION_TERMS;
+    if(name == "union_term")        return ID_UNION_TERM;
+    if(name == "def_symbols")       return ID_DEF_SYMBOLS;
+    if(name == "def_symbol")        return ID_DEF_SYMBOL;
+    if(name == "rules")             return ID_RULES;
+    if(name == "rule")              return ID_RULE;
+    if(name == "rule_alts")         return ID_RULE_ALTS;
+    if(name == "rule_alt")          return ID_RULE_ALT;
+    if(name == "rule_action_block") return ID_RULE_ACTION_BLOCK;
+    if(name == "rule_terms")        return ID_RULE_TERMS;
+    if(name == "code")              return ID_CODE;
+    if(name == "+")                 return '+';
+    if(name == "*")                 return '*';
+    if(name == "?")                 return '?';
+    if(name == "(")                 return '(';
     throw ERROR_LEXER_NAME_NOT_FOUND;
     return 0;
+}
+xl::TreeContext* &tree_context()
+{
+    static xl::TreeContext* tc = NULL;
+    return tc;
 }
 
 %}
@@ -141,41 +184,156 @@ uint32_t name_to_id(std::string name)
 %token<string_value> ID_STRING
 %token<char_value>   ID_CHAR
 %token<ident_value>  ID_IDENT
-%type<symbol_value>  program statement expression
+%type<symbol_value>  grammar definitions definition
+        def_proto_block union_block union_members union_member union_terms union_term
+        def_symbols def_symbol rules rule rule_alts rule_alt rule_action_block rule_terms rule_term code
 
-%left '+' '-'
-%left '*' '/'
-%nonassoc ID_UMINUS
+%nonassoc ID_GRAMMAR ID_DEFINITIONS ID_DEFINITION ID_DEF_EQ ID_DEF_BRACE
+        ID_DEF_PROTO_BLOCK ID_UNION_BLOCK ID_UNION_MEMBERS ID_UNION_MEMBER ID_UNION_TERMS ID_UNION_TERM
+        ID_DEF_SYMBOLS ID_DEF_SYMBOL ID_RULES ID_RULE ID_RULE_ALTS ID_RULE_ALT ID_RULE_ACTION_BLOCK ID_RULE_TERMS ID_FENCE ID_CODE
+%nonassoc ':'
+%nonassoc '|' '(' ';'
+%nonassoc '+' '*' '?'
+
+%nonassoc ID_COUNT
 
 %%
 
 root:
-      program { pc->tree_context().root() = $1; }
+      grammar { pc->tree_context().root() = $1; }
     | error   { yyclearin; /* yyerrok; YYABORT; */ }
     ;
 
-program:
-      statement             { $$ = $1; }
-    | program ',' statement { $$ = MAKE_SYMBOL(',', @$, 2, $1, $3); }
+grammar:
+      definitions ID_FENCE rules ID_FENCE code {
+                $$ = MAKE_SYMBOL(ID_GRAMMAR, @$, 3, $1, $3, $5);
+            }
     ;
 
-statement:
-      expression              { $$ = $1; }
-    | ID_IDENT '=' expression { $$ = MAKE_SYMBOL('=', @$, 2, MAKE_TERM(ID_IDENT, @$, $1), $3); }
+//=============================================================================
+// DEFINITIONS SECTION
+
+definitions:
+      /* empty */            { $$ = EOL; }
+    | definitions definition { $$ = MAKE_SYMBOL(ID_DEFINITIONS, @$, 2, $1, $2); }
     ;
 
-expression:
-      ID_INT                         { $$ = MAKE_TERM(ID_INT, @$, $1); }
-    | ID_FLOAT                       { $$ = MAKE_TERM(ID_FLOAT, @$, $1); }
-    | ID_STRING                      { $$ = MAKE_TERM(ID_STRING, @$, $1); }
-    | ID_CHAR                        { $$ = MAKE_TERM(ID_CHAR, @$, $1); }
-    | ID_IDENT                       { $$ = MAKE_TERM(ID_IDENT, @$, $1); }
-    | '-' expression %prec ID_UMINUS { $$ = MAKE_SYMBOL(ID_UMINUS, @$, 1, $2); }
-    | expression '+' expression      { $$ = MAKE_SYMBOL('+', @$, 2, $1, $3); }
-    | expression '-' expression      { $$ = MAKE_SYMBOL('-', @$, 2, $1, $3); }
-    | expression '*' expression      { $$ = MAKE_SYMBOL('*', @$, 2, $1, $3); }
-    | expression '/' expression      { $$ = MAKE_SYMBOL('/', @$, 2, $1, $3); }
-    | '(' expression ')'             { $$ = $2; }
+definition:
+      '%' ID_IDENT                     { $$ = MAKE_SYMBOL(ID_DEFINITION, @$, 1, MAKE_TERM(ID_IDENT, @$, $2)); }
+    | '%' ID_IDENT def_symbols         { $$ = MAKE_SYMBOL(ID_DEFINITION, @$, 2, MAKE_TERM(ID_IDENT, @$, $2), $3); }
+    | '%' ID_IDENT '{' union_block '}' { $$ = MAKE_SYMBOL(ID_DEFINITION, @$, 2, MAKE_TERM(ID_IDENT, @$, $2), $4); }
+    | '%' ID_IDENT '=' ID_STRING {
+                $$ = MAKE_SYMBOL(ID_DEF_EQ, @$, 2,
+                        MAKE_TERM(ID_IDENT, @$, $2),
+                        MAKE_TERM(ID_STRING, @$, $4));
+            }
+    | '%' ID_IDENT '<' ID_IDENT '>' def_symbols {
+                $$ = MAKE_SYMBOL(ID_DEF_BRACE, @$, 3,
+                        MAKE_TERM(ID_IDENT, @$, $2),
+                        MAKE_TERM(ID_IDENT, @$, $4),
+                        $6);
+            }
+    | def_proto_block { $$ = $1; }
+    ;
+
+def_symbols:
+      def_symbol             { $$ = MAKE_SYMBOL(ID_DEF_SYMBOLS, @$, 1, $1); }
+    | def_symbols def_symbol { $$ = MAKE_SYMBOL(ID_DEF_SYMBOLS, @$, 2, $1, $2); }
+    ;
+
+def_symbol:
+      ID_IDENT { $$ = MAKE_SYMBOL(ID_DEF_SYMBOL, @$, 1, MAKE_TERM(ID_IDENT, @$, $1)); }
+    | ID_CHAR  { $$ = MAKE_SYMBOL(ID_DEF_SYMBOL, @$, 1, MAKE_TERM(ID_CHAR, @$, $1)); }
+    ;
+
+union_block:
+      union_members { $$ = MAKE_SYMBOL(ID_UNION_BLOCK, @$, 1, $1); }
+    ;
+
+union_members:
+      /* empty */                { $$ = EOL; }
+    | union_members union_member { $$ = MAKE_SYMBOL(ID_UNION_MEMBERS, @$, 2, $1, $2); }
+    ;
+
+union_member:
+      union_terms ';' { $$ = MAKE_SYMBOL(ID_UNION_MEMBER, @$, 1, $1); }
+    ;
+
+union_terms:
+      /* empty */            { $$ = EOL; }
+    | union_terms union_term { $$ = MAKE_SYMBOL(ID_UNION_TERMS, @$, 2, $1, $2); }
+    ;
+
+union_term:
+      ID_STRING {
+                $$ = MAKE_SYMBOL(ID_UNION_TERM, @$, 1,
+                        MAKE_TERM(ID_STRING, @$, $1));
+            }
+    ;
+
+def_proto_block:
+      ID_STRING {
+                $$ = $1->size() ? MAKE_SYMBOL(ID_DEF_PROTO_BLOCK, @$, 1,
+                        MAKE_TERM(ID_STRING, @$, $1)) : NULL;
+            }
+    ;
+
+//=============================================================================
+// RULES SECTION
+
+rules:
+      /* empty */ { $$ = EOL; }
+    | rules rule  { $$ = MAKE_SYMBOL(ID_RULES, @$, 2, $1, $2); }
+    ;
+
+rule:
+      ID_IDENT ':' rule_alts ';' {
+                $$ = MAKE_SYMBOL(ID_RULE, @$, 2, MAKE_TERM(ID_IDENT, @$, $1), $3);
+            }
+    ;
+
+rule_alts:
+      rule_alt               { $$ = MAKE_SYMBOL(ID_RULE_ALTS, @$, 1, $1); }
+    | rule_alts '|' rule_alt { $$ = MAKE_SYMBOL(ID_RULE_ALTS, @$, 2, $1, $3); }
+    ;
+
+rule_alt:
+      rule_terms rule_action_block { $$ = MAKE_SYMBOL(ID_RULE_ALT, @$, 2, $1, $2); }
+    ;
+
+rule_action_block:
+      /* empty */ { $$ = NULL; }
+    | ID_STRING {
+                $$ = $1->size() ? MAKE_SYMBOL(ID_RULE_ACTION_BLOCK, @$, 1,
+                        MAKE_TERM(ID_STRING, @$, $1)) : NULL;
+            }
+    ;
+
+rule_terms:
+      /* empty */          { $$ = EOL; }
+    | rule_terms rule_term { $$ = MAKE_SYMBOL(ID_RULE_TERMS, @$, 2, $1, $2); }
+    ;
+
+rule_term:
+//      ID_INT            { $$ = MAKE_TERM(ID_INT, @$, $1); } // NOTE: not needed
+//    | ID_FLOAT          { $$ = MAKE_TERM(ID_FLOAT, @$, $1); } // NOTE: not needed
+//    | ID_STRING         { $$ = MAKE_TERM(ID_STRING, @$, $1); } // NOTE: causes shift-reduce conflict
+      ID_CHAR           { $$ = MAKE_TERM(ID_CHAR, @$, $1); }
+    | ID_IDENT          { $$ = MAKE_TERM(ID_IDENT, @$, $1); }
+    | rule_term '+'     { $$ = MAKE_SYMBOL('+', @$, 1, $1); }
+    | rule_term '*'     { $$ = MAKE_SYMBOL('*', @$, 1, $1); }
+    | rule_term '?'     { $$ = MAKE_SYMBOL('?', @$, 1, $1); }
+    | '(' rule_alts ')' { $$ = MAKE_SYMBOL('(', @$, 1, $2); }
+    ;
+
+//=============================================================================
+// CODE SECTION
+
+code:
+      ID_STRING {
+                $$ = $1->size() ? MAKE_SYMBOL(ID_CODE, @$, 1,
+                        MAKE_TERM(ID_STRING, @$, $1)) : NULL;
+            }
     ;
 
 %%
@@ -205,9 +363,9 @@ void display_usage(bool verbose)
                 << std::endl
                 << "Input control:" << std::endl
                 << "  -i, --in-xml FILENAME (de-serialize from xml)" << std::endl
-                << "  -e, --expr EXPRESSION" << std::endl
                 << std::endl
                 << "Output control:" << std::endl
+                << "  -y, --yacc" << std::endl
                 << "  -l, --lisp" << std::endl
                 << "  -x, --xml" << std::endl
                 << "  -g, --graph" << std::endl
@@ -224,6 +382,7 @@ struct args_t
     typedef enum
     {
         MODE_NONE,
+        MODE_YACC,
         MODE_LISP,
         MODE_XML,
         MODE_GRAPH,
@@ -245,10 +404,10 @@ bool parse_args(int argc, char** argv, args_t &args)
 {
     int opt = 0;
     int longIndex = 0;
-    static const char *optString = "i:e:lxgdmh?";
+    static const char *optString = "i:y:lxgdmh?";
     static const struct option longOpts[] = {
                 { "in-xml", required_argument, NULL, 'i' },
-                { "expr",   required_argument, NULL, 'e' },
+                { "yacc",   required_argument, NULL, 'y' },
                 { "lisp",   no_argument,       NULL, 'l' },
                 { "xml",    no_argument,       NULL, 'x' },
                 { "graph",  no_argument,       NULL, 'g' },
@@ -263,7 +422,10 @@ bool parse_args(int argc, char** argv, args_t &args)
         switch(opt)
         {
             case 'i': args.in_xml = optarg; break;
-            case 'e': args.expr = optarg; break;
+            case 'y':
+                args.mode = args_t::MODE_YACC;
+                args.expr = optarg;
+                break;
             case 'l': args.mode = args_t::MODE_LISP; break;
             case 'x': args.mode = args_t::MODE_XML; break;
             case 'g': args.mode = args_t::MODE_GRAPH; break;
@@ -310,10 +472,16 @@ bool import_ast(args_t &args, xl::Allocator &alloc, xl::node::NodeIdentIFace* &a
     return true;
 }
 
-void export_ast(args_t &args, const xl::node::NodeIdentIFace* ast)
+void export_ast(args_t &args, xl::node::NodeIdentIFace* ast)
 {
     switch(args.mode)
     {
+        case args_t::MODE_YACC:
+            {
+                EBNFPrinter v(tree_context());
+                rewrite_tree_until_stable(ast, &v);
+            }
+            break;
         case args_t::MODE_LISP:  xl::mvc::MVCView::print_lisp(ast); break;
         case args_t::MODE_XML:   xl::mvc::MVCView::print_xml(ast); break;
         case args_t::MODE_GRAPH: xl::mvc::MVCView::print_graph(ast); break;
@@ -348,8 +516,19 @@ bool do_work(args_t &args)
     return true;
 }
 
+void add_signal_handlers()
+{
+    xl::system::add_sighandler(SIGABRT, xl::system::backtrace_sighandler);
+    xl::system::add_sighandler(SIGINT,  xl::system::backtrace_sighandler);
+    xl::system::add_sighandler(SIGSEGV, xl::system::backtrace_sighandler);
+    xl::system::add_sighandler(SIGFPE,  xl::system::backtrace_sighandler);
+    xl::system::add_sighandler(SIGBUS,  xl::system::backtrace_sighandler);
+    xl::system::add_sighandler(SIGILL,  xl::system::backtrace_sighandler);
+}
+
 int main(int argc, char** argv)
 {
+    add_signal_handlers();
     args_t args;
     if(!parse_args(argc, argv, args))
         return EXIT_FAILURE;
