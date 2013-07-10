@@ -343,7 +343,7 @@ ScannerContext::ScannerContext(const char* buf)
       m_line(1), m_column(1), m_prev_column(1)
 {}
 
-xl::node::NodeIdentIFace* make_ast(xl::Allocator &alloc, const char* s)
+xl::node::NodeIdentIFace* make_ast(xl::Allocator &alloc, char* s)
 {
     ParserContext parser_context(alloc, s);
     yyscan_t scanner = parser_context.scanner_context().m_scanner;
@@ -356,16 +356,16 @@ xl::node::NodeIdentIFace* make_ast(xl::Allocator &alloc, const char* s)
 
 void display_usage(bool verbose)
 {
-    std::cout << "Usage: XLang [-i] OPTION [-m]" << std::endl;
+    std::cout << "Usage: XLang [-i|-y] OPTION [-m]" << std::endl;
     if(verbose)
     {
         std::cout << "Parses input and prints a syntax tree to standard out" << std::endl
                 << std::endl
                 << "Input control:" << std::endl
                 << "  -i, --in-xml FILENAME (de-serialize from xml)" << std::endl
+                << "  -y, --yacc-file FILENAME" << std::endl
                 << std::endl
                 << "Output control:" << std::endl
-                << "  -y, --yacc" << std::endl
                 << "  -l, --lisp" << std::endl
                 << "  -x, --xml" << std::endl
                 << "  -g, --graph" << std::endl
@@ -391,8 +391,8 @@ struct args_t
     } mode_e;
 
     mode_e mode;
+    std::string yacc_file;
     std::string in_xml;
-    std::string expr;
     bool dump_memory;
 
     args_t()
@@ -406,15 +406,15 @@ bool parse_args(int argc, char** argv, args_t &args)
     int longIndex = 0;
     static const char *optString = "i:y:lxgdmh?";
     static const struct option longOpts[] = {
-                { "in-xml", required_argument, NULL, 'i' },
-                { "yacc",   required_argument, NULL, 'y' },
-                { "lisp",   no_argument,       NULL, 'l' },
-                { "xml",    no_argument,       NULL, 'x' },
-                { "graph",  no_argument,       NULL, 'g' },
-                { "dot",    no_argument,       NULL, 'd' },
-                { "memory", no_argument,       NULL, 'm' },
-                { "help",   no_argument,       NULL, 'h' },
-                { NULL,     no_argument,       NULL, 0 }
+                { "in-xml",    required_argument, NULL, 'i' },
+                { "yacc-file", required_argument, NULL, 'y' },
+                { "lisp",      no_argument,       NULL, 'l' },
+                { "xml",       no_argument,       NULL, 'x' },
+                { "graph",     no_argument,       NULL, 'g' },
+                { "dot",       no_argument,       NULL, 'd' },
+                { "memory",    no_argument,       NULL, 'm' },
+                { "help",      no_argument,       NULL, 'h' },
+                { NULL,        no_argument,       NULL, 0 }
             };
     opt = getopt_long(argc, argv, optString, longOpts, &longIndex);
     while(opt != -1)
@@ -424,7 +424,7 @@ bool parse_args(int argc, char** argv, args_t &args)
             case 'i': args.in_xml = optarg; break;
             case 'y':
                 args.mode = args_t::MODE_YACC;
-                args.expr = optarg;
+                args.yacc_file = optarg;
                 break;
             case 'l': args.mode = args_t::MODE_LISP; break;
             case 'x': args.mode = args_t::MODE_XML; break;
@@ -462,12 +462,38 @@ bool import_ast(args_t &args, xl::Allocator &alloc, xl::node::NodeIdentIFace* &a
     }
     else
     {
-        ast = make_ast(alloc, args.expr.c_str());
+        FILE* file = fopen(args.yacc_file.c_str(), "rb");
+        if(!file)
+        {
+            std::cout << "cannot open file" << std::endl;
+            return false;
+        }
+        fseek(file, 0, SEEK_END);
+        long length = ftell(file);
+        rewind(file);
+        if(!length)
+        {
+            std::cout << "file empty" << std::endl;
+            fclose(file);
+            return false;
+        }
+        char* buffer = new char[length+1];
+        buffer[length] = '\0';
+        if(!buffer)
+        {
+            std::cout << "not enough memory" << std::endl;
+            fclose(file);
+            return false;
+        }
+        fread(buffer, 1, length, file);
+        ast = make_ast(alloc, buffer);
+        delete[] buffer;
         if(!ast)
         {
             std::cout << error_messages().str().c_str() << std::endl;
             return false;
         }
+        fclose(file);
     }
     return true;
 }
