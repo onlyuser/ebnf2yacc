@@ -28,6 +28,7 @@
 #include "mvc/XLangMVCModel.h" // mvc::MVCModel
 #include "XLangTreeContext.h" // TreeContext
 #include "XLangType.h" // uint32_t
+#include "XLangString.h" // xl::read_file
 #include "TreeRewriter.h" // ebnf_to_bnf
 #include "EBNFPrinter.h" // EBNFPrinter
 #include <stdio.h> // size_t
@@ -51,16 +52,26 @@ void _XLANG_error(YYLTYPE* loc, ParserContext* pc, yyscan_t scanner, const char*
     if(loc)
     {
         std::stringstream ss;
-        int last_line_pos = 0;
+        int line_start = 0;
+        int line_end = 0;
         for(int i = pc->scanner_context().m_pos; i >= 0; i--)
         {
             if(pc->scanner_context().m_buf[i] == '\n')
             {
-                last_line_pos = i+1;
+                line_start = i+1;
                 break;
             }
         }
-        ss << &pc->scanner_context().m_buf[last_line_pos] << std::endl;
+        for(int j = pc->scanner_context().m_pos; j < pc->scanner_context().m_length; j++)
+        {
+            if(pc->scanner_context().m_buf[j] == '\n')
+            {
+                line_end = j;
+                break;
+            }
+        }
+        std::string line(pc->scanner_context().m_buf, line_start, line_end-line_start);
+        ss << line << std::endl;
         ss << std::string(loc->first_column-1, '-') <<
                 std::string(loc->last_column - loc->first_column + 1, '^') << std::endl <<
                 loc->first_line << ":c" << loc->first_column << " to " <<
@@ -345,7 +356,7 @@ ScannerContext::ScannerContext(const char* buf)
       m_line(1), m_column(1), m_prev_column(1)
 {}
 
-xl::node::NodeIdentIFace* make_ast(xl::Allocator &alloc, char* s)
+xl::node::NodeIdentIFace* make_ast(xl::Allocator &alloc, const char* s)
 {
     parser_context() = new (PNEW(alloc, , ParserContext)) ParserContext(alloc, s);
     yyscan_t scanner = parser_context()->scanner_context().m_scanner;
@@ -464,38 +475,15 @@ bool import_ast(args_t &args, xl::Allocator &alloc, xl::node::NodeIdentIFace* &a
     }
     else
     {
-        FILE* file = fopen(args.yacc_file.c_str(), "rb");
-        if(!file)
-        {
-            std::cout << "cannot open file" << std::endl;
+        std::string s;
+        if(!xl::read_file(args.yacc_file, s))
             return false;
-        }
-        fseek(file, 0, SEEK_END);
-        long length = ftell(file);
-        rewind(file);
-        if(!length)
-        {
-            std::cout << "file empty" << std::endl;
-            fclose(file);
-            return false;
-        }
-        char* buffer = new char[length+1];
-        buffer[length] = '\0';
-        if(!buffer)
-        {
-            std::cout << "not enough memory" << std::endl;
-            fclose(file);
-            return false;
-        }
-        fread(buffer, 1, length, file);
-        ast = make_ast(alloc, buffer);
-        delete[] buffer;
+        ast = make_ast(alloc, s.c_str());
         if(!ast)
         {
             std::cout << error_messages().str().c_str() << std::endl;
             return false;
         }
-        fclose(file);
     }
     return true;
 }
