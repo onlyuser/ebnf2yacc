@@ -156,10 +156,10 @@ uint32_t name_to_id(std::string name)
     throw ERROR_LEXER_NAME_NOT_FOUND;
     return 0;
 }
-xl::TreeContext* &tree_context()
+ParserContext* &parser_context()
 {
-    static xl::TreeContext* tc = NULL;
-    return tc;
+    static ParserContext* pc = NULL;
+    return pc;
 }
 
 %}
@@ -331,6 +331,8 @@ rule_term:
 
 code:
       ID_STRING {
+                //std::cerr << $1 << std::endl;
+                //throw;
                 $$ = $1->size() ? MAKE_SYMBOL(ID_CODE, @$, 1,
                         MAKE_TERM(ID_STRING, @$, $1)) : NULL;
             }
@@ -345,13 +347,13 @@ ScannerContext::ScannerContext(const char* buf)
 
 xl::node::NodeIdentIFace* make_ast(xl::Allocator &alloc, char* s)
 {
-    ParserContext parser_context(alloc, s);
-    yyscan_t scanner = parser_context.scanner_context().m_scanner;
+    parser_context() = new (PNEW(alloc, , ParserContext)) ParserContext(alloc, s);
+    yyscan_t scanner = parser_context()->scanner_context().m_scanner;
     _XLANG_lex_init(&scanner);
-    _XLANG_set_extra(&parser_context, scanner);
-    int error_code = _XLANG_parse(&parser_context, scanner); // parser entry point
+    _XLANG_set_extra(parser_context(), scanner);
+    int error_code = _XLANG_parse(parser_context(), scanner); // parser entry point
     _XLANG_lex_destroy(scanner);
-    return (!error_code && error_messages().str().empty()) ? parser_context.tree_context().root() : NULL;
+    return (!error_code && error_messages().str().empty()) ? parser_context()->tree_context().root() : NULL;
 }
 
 void display_usage(bool verbose)
@@ -504,7 +506,7 @@ void export_ast(args_t &args, xl::node::NodeIdentIFace* ast)
     {
         case args_t::MODE_YACC:
             {
-                EBNFPrinter v(tree_context());
+                EBNFPrinter v(&parser_context()->tree_context());
                 rewrite_tree_until_stable(ast, &v);
             }
             break;

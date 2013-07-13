@@ -28,6 +28,7 @@
 #include <string.h> // memcpy
 #include <stdlib.h> // atoi
 #include <algorithm> // std::min
+#include <iostream>
 
 // When in the lexer you have to access parm through the extra data.
 #define PARM yyget_extra(yyscanner)->scanner_context()
@@ -62,7 +63,7 @@ void reset_buf()
     ss.clear();
 }
 
-#define LOC           begin_token(yyscanner, yyleng)
+#define LOC           begin_token(yyscanner, yyleng) /*std::cerr << yytext << std::endl*/
 #define PUSH_STATE(x) yy_push_state(x, yyscanner)
 #define POP_STATE     yy_pop_state(yyscanner)
 #define _TOP_STATE    yy_top_state(yyscanner)
@@ -191,14 +192,14 @@ lit_float        {digit}*[.]{digit}+
                     return ID_STRING;
                 }
             }
-<ST_PROTO_BLOCK>{any} {LOC;
+<ST_PROTO_BLOCK>{any} {
                 buf() << yytext;
             }
 
 <INITIAL>{lit_char_def} {LOC;
                 return *yytext;
             }
-<INITIAL>{lit_char_percent} {LOC;
+<INITIAL>{lit_char_percent} {
                 yyless(1);
                 return *yytext;
             }
@@ -234,7 +235,7 @@ lit_float        {digit}*[.]{digit}+
                 else
                     REJECT; // fall-through to {any} handler
             }
-<ST_ACTION_BLOCK>{any} {LOC;
+<ST_ACTION_BLOCK>{any} {
                 buf() << yytext;
             }
 
@@ -247,11 +248,13 @@ lit_float        {digit}*[.]{digit}+
  /*==========================================================================*/
  /* CODE SECTION */
 
-<ST_CODE>{any} {LOC;
+<ST_CODE>{any} {
                 buf() << yytext;
             }
 <ST_CODE><<EOF>> {
                 LVAL.string_value = TREE_CONTEXT.alloc_string(buf().str());
+                //std::cerr << "qwe" << std::endl;
+                BEGIN INITIAL;
                 return ID_STRING;
             }
 
