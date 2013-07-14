@@ -94,7 +94,7 @@ TEST_SH := $(SCRIPT_PATH)/test.sh
 
 $(BUILD_PATH)/$(OUT_PREFIX).%.ebnf.pass : $(BINARY) $(TEST_PATH)/%.ebnf.test
 	-$(TEST_SH) $(BINARY) \
-			--yacc \
+			--yacc__--expand-ebnf \
 			$(INPUT_MODE) \
 			$(TEST_PATH)/$*.ebnf.test \
 			$(TEST_PATH)/$*.ebnf.gold \

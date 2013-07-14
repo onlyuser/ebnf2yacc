@@ -63,7 +63,7 @@ void reset_buf()
     ss.clear();
 }
 
-#define LOC           begin_token(yyscanner, yyleng) /*std::cerr << yytext << std::endl*/
+#define LOC           begin_token(yyscanner, yyleng)
 #define PUSH_STATE(x) yy_push_state(x, yyscanner)
 #define POP_STATE     yy_pop_state(yyscanner)
 #define _TOP_STATE    yy_top_state(yyscanner)
@@ -253,8 +253,6 @@ lit_float        {digit}*[.]{digit}+
             }
 <ST_CODE><<EOF>> {
                 LVAL.string_value = TREE_CONTEXT.alloc_string(buf().str());
-                //std::cerr << "qwe" << std::endl;
-                BEGIN INITIAL;
                 return ID_STRING;
             }
 

@@ -71,7 +71,7 @@ void rewrite_tree_until_stable(
         #endif
         n++;
     } while(changed); // repeat until stabilize
-    #ifndef DEBUG_EBNF
+    #ifdef DEBUG_EBNF
         std::cout << captured_stdout;
     #endif
 }

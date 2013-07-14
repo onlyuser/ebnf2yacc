@@ -1,5 +1,5 @@
-# XLang
-# -- A parser framework for language modeling
+# ebnf2yacc
+# -- A kleene closure preprocessor for yacc
 # Copyright (C) 2011 Jerry Chen <mailto:onlyuser@gmail.com>
 #
 # This program is free software: you can redistribute it and/or modify
@@ -32,7 +32,7 @@ LIB_PATH = lib
 SRC_PATH = src
 BUILD_PATH = build
 BIN_PATH = bin
-BINARY = $(BIN_PATH)/XLang
+BINARY = $(BIN_PATH)/ebnf2yacc
 
 COMMON = $(PARENT)/lib-xlang
 INCLUDE_PATH_COMMON = $(COMMON)/include
@@ -55,11 +55,11 @@ LIB_FLAGS = \
 
 CXX = g++
 DEBUG = -g
-CXXFLAGS = -Wall $(DEBUG) $(INCLUDE_PATH_FLAGS) -std=c++0x
+CXXFLAGS = -Wall $(DEBUG) $(INCLUDE_PATH_FLAGS) -std=c++0x -D_GNU_SOURCE
 ifdef INCLUDE_PATH_EXTERN
 	CXXFLAGS := $(CXXFLAGS) -DINCLUDE_PATH_EXTERN
 endif
-LDFLAGS = -Wall $(DEBUG) $(LIB_PATH_FLAGS) $(LIB_FLAGS)
+LDFLAGS = -Wall $(DEBUG) $(LIB_PATH_FLAGS) $(LIB_FLAGS) -rdynamic
 
 SCRIPT_PATH = $(PARENT)/scripts
 TEST_PATH = $(PARENT)/tests
@@ -82,13 +82,14 @@ YACC_GEN = \
 .SECONDARY : $(YACC_GEN)
 
 $(SRC_PATH)/%.tab.cpp $(INCLUDE_PATH)/%.tab.h : $(SRC_PATH)/%.y
-	bison -d $<
+	bison -d -v $<
 	mv $*.tab.c $(SRC_PATH)/$*.tab.cpp
 	mv $*.tab.h $(INCLUDE_PATH)/$*.tab.h
+	mv $*.output $(SRC_PATH)/$*.output
 
 .PHONY : clean_yacc
 clean_yacc :
-	-rm $(YACC_GEN)
+	-rm $(YACC_GEN) $(SRC_PATH)/*.output
 
 #==================
 # lex-gen
@@ -165,28 +166,32 @@ clean_binary : clean_objects
 #==================
 
 .PHONY : test
-test : $(BINARY)
+test : $(BINARY) test_ebnf
 	cd $(TEST_PATH); $(MAKE) $@ \
-			BUILD_PATH=$(abspath $(BUILD_PATH)) BINARY=$(abspath $(BINARY)) INPUT_MODE="arg" \
-			BASIC_SUITE=1
-	cd $(TEST_PATH); $(MAKE) $@ \
-			BUILD_PATH=$(abspath $(BUILD_PATH)) BINARY=$(abspath $(BINARY)) INPUT_MODE="arg" \
-			ADVANCED_SUITE_COMMENTS=1
-	cd $(TEST_PATH); $(MAKE) $@ \
-			BUILD_PATH=$(abspath $(BUILD_PATH)) BINARY=$(abspath $(BINARY)) INPUT_MODE="arg" \
-			ADVANCED_SUITE_STRINGS=1
+			BUILD_PATH=$(abspath $(BUILD_PATH)) BINARY=$(abspath $(BINARY)) INPUT_MODE="file" \
+			YACC_NIEMANN_SUITE=1
 
 .PHONY : clean_test
-clean_test :
+clean_test : clean_test_ebnf
 	cd $(TEST_PATH); $(MAKE) $@ \
 			BUILD_PATH=$(abspath $(BUILD_PATH)) \
-			BASIC_SUITE=1
+			YACC_NIEMANN_SUITE=1
+
+#==================
+# test_ebnf
+#==================
+
+.PHONY : test_ebnf
+test_ebnf : $(BINARY)
+	cd $(TEST_PATH); $(MAKE) $@ \
+			BUILD_PATH=$(abspath $(BUILD_PATH)) BINARY=$(abspath $(BINARY)) INPUT_MODE="file" \
+			YACC_EBNF_SUITE=1
+
+.PHONY : clean_test_ebnf
+clean_test_ebnf :
 	cd $(TEST_PATH); $(MAKE) $@ \
 			BUILD_PATH=$(abspath $(BUILD_PATH)) \
-			ADVANCED_SUITE_COMMENTS=1
-	cd $(TEST_PATH); $(MAKE) $@ \
-			BUILD_PATH=$(abspath $(BUILD_PATH)) \
-			ADVANCED_SUITE_STRINGS=1
+			YACC_EBNF_SUITE=1
 
 #==================
 # import
@@ -196,25 +201,13 @@ clean_test :
 import : $(BINARY)
 	cd $(TEST_PATH); $(MAKE) $@ \
 			BUILD_PATH=$(abspath $(BUILD_PATH)) BINARY=$(abspath $(BINARY)) INPUT_MODE="xml" \
-			BASIC_SUITE=1
-	cd $(TEST_PATH); $(MAKE) $@ \
-			BUILD_PATH=$(abspath $(BUILD_PATH)) BINARY=$(abspath $(BINARY)) INPUT_MODE="xml" \
-			ADVANCED_SUITE_COMMENTS=1
-	cd $(TEST_PATH); $(MAKE) $@ \
-			BUILD_PATH=$(abspath $(BUILD_PATH)) BINARY=$(abspath $(BINARY)) INPUT_MODE="xml" \
-			ADVANCED_SUITE_STRINGS=1
+			YACC_NIEMANN_SUITE=1
 
 .PHONY : clean_import
 clean_import :
 	cd $(TEST_PATH); $(MAKE) $@ \
 			BUILD_PATH=$(abspath $(BUILD_PATH)) \
-			BASIC_SUITE=1
-	cd $(TEST_PATH); $(MAKE) $@ \
-			BUILD_PATH=$(abspath $(BUILD_PATH)) \
-			ADVANCED_SUITE_COMMENTS=1
-	cd $(TEST_PATH); $(MAKE) $@ \
-			BUILD_PATH=$(abspath $(BUILD_PATH)) \
-			ADVANCED_SUITE_STRINGS=1
+			YACC_NIEMANN_SUITE=1
 
 #==================
 # pure
@@ -223,26 +216,14 @@ clean_import :
 .PHONY : pure
 pure : $(BINARY)
 	cd $(TEST_PATH); $(MAKE) $@ \
-			BUILD_PATH=$(abspath $(BUILD_PATH)) BINARY=$(abspath $(BINARY)) INPUT_MODE="arg" \
-			BASIC_SUITE=1
-	cd $(TEST_PATH); $(MAKE) $@ \
-			BUILD_PATH=$(abspath $(BUILD_PATH)) BINARY=$(abspath $(BINARY)) INPUT_MODE="arg" \
-			ADVANCED_SUITE_COMMENTS=1
-	cd $(TEST_PATH); $(MAKE) $@ \
-			BUILD_PATH=$(abspath $(BUILD_PATH)) BINARY=$(abspath $(BINARY)) INPUT_MODE="arg" \
-			ADVANCED_SUITE_STRINGS=1
+			BUILD_PATH=$(abspath $(BUILD_PATH)) BINARY=$(abspath $(BINARY)) INPUT_MODE="stdin" \
+			YACC_NIEMANN_SUITE=1
 
 .PHONY : clean_pure
 clean_pure :
 	cd $(TEST_PATH); $(MAKE) $@ \
 			BUILD_PATH=$(abspath $(BUILD_PATH)) \
-			BASIC_SUITE=1
-	cd $(TEST_PATH); $(MAKE) $@ \
-			BUILD_PATH=$(abspath $(BUILD_PATH)) \
-			ADVANCED_SUITE_COMMENTS=1
-	cd $(TEST_PATH); $(MAKE) $@ \
-			BUILD_PATH=$(abspath $(BUILD_PATH)) \
-			ADVANCED_SUITE_STRINGS=1
+			YACC_NIEMANN_SUITE=1
 
 #==================
 # dot
@@ -251,26 +232,14 @@ clean_pure :
 .PHONY : dot
 dot : $(BINARY)
 	cd $(TEST_PATH); $(MAKE) $@ \
-			BUILD_PATH=$(abspath $(BUILD_PATH)) BINARY=$(abspath $(BINARY)) INPUT_MODE="arg" \
-			BASIC_SUITE=1
-	cd $(TEST_PATH); $(MAKE) $@ \
-			BUILD_PATH=$(abspath $(BUILD_PATH)) BINARY=$(abspath $(BINARY)) INPUT_MODE="arg" \
-			ADVANCED_SUITE_COMMENTS=1
-	cd $(TEST_PATH); $(MAKE) $@ \
-			BUILD_PATH=$(abspath $(BUILD_PATH)) BINARY=$(abspath $(BINARY)) INPUT_MODE="arg" \
-			ADVANCED_SUITE_STRINGS=1
+			BUILD_PATH=$(abspath $(BUILD_PATH)) BINARY=$(abspath $(BINARY)) INPUT_MODE="stdin" \
+			YACC_NIEMANN_SUITE=1
 
 .PHONY : clean_dot
 clean_dot :
 	cd $(TEST_PATH); $(MAKE) $@ \
 			BUILD_PATH=$(abspath $(BUILD_PATH)) \
-			BASIC_SUITE=1
-	cd $(TEST_PATH); $(MAKE) $@ \
-			BUILD_PATH=$(abspath $(BUILD_PATH)) \
-			ADVANCED_SUITE_COMMENTS=1
-	cd $(TEST_PATH); $(MAKE) $@ \
-			BUILD_PATH=$(abspath $(BUILD_PATH)) \
-			ADVANCED_SUITE_STRINGS=1
+			YACC_NIEMANN_SUITE=1
 
 #==================
 # xml
@@ -279,26 +248,14 @@ clean_dot :
 .PHONY : xml
 xml : $(BINARY)
 	cd $(TEST_PATH); $(MAKE) $@ \
-			BUILD_PATH=$(abspath $(BUILD_PATH)) BINARY=$(abspath $(BINARY)) INPUT_MODE="arg" \
-			BASIC_SUITE=1
-	cd $(TEST_PATH); $(MAKE) $@ \
-			BUILD_PATH=$(abspath $(BUILD_PATH)) BINARY=$(abspath $(BINARY)) INPUT_MODE="arg" \
-			ADVANCED_SUITE_COMMENTS=1
-	cd $(TEST_PATH); $(MAKE) $@ \
-			BUILD_PATH=$(abspath $(BUILD_PATH)) BINARY=$(abspath $(BINARY)) INPUT_MODE="arg" \
-			ADVANCED_SUITE_STRINGS=1
+			BUILD_PATH=$(abspath $(BUILD_PATH)) BINARY=$(abspath $(BINARY)) INPUT_MODE="stdin" \
+			YACC_NIEMANN_SUITE=1
 
 .PHONY : clean_xml
 clean_xml :
 	cd $(TEST_PATH); $(MAKE) $@ \
 			BUILD_PATH=$(abspath $(BUILD_PATH)) \
-			BASIC_SUITE=1
-	cd $(TEST_PATH); $(MAKE) $@ \
-			BUILD_PATH=$(abspath $(BUILD_PATH)) \
-			ADVANCED_SUITE_COMMENTS=1
-	cd $(TEST_PATH); $(MAKE) $@ \
-			BUILD_PATH=$(abspath $(BUILD_PATH)) \
-			ADVANCED_SUITE_STRINGS=1
+			YACC_NIEMANN_SUITE=1
 
 #==================
 # lint (common)

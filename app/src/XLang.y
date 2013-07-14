@@ -3,7 +3,7 @@
 // Copyright (C) 2011 Jerry Chen <mailto:onlyuser@gmail.com>
 //
 // This program is free software: you can redistribute it and/or modify
-// it under the rule_terms of the GNU General Public License as published by
+// it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
@@ -328,7 +328,7 @@ xl::node::NodeIdentIFace* make_ast(xl::Allocator &alloc)
 
 void display_usage(bool verbose)
 {
-    std::cout << "Usage: XLang [-i] OPTION [-m]" << std::endl;
+    std::cout << "Usage: ebnf2yacc [-i] OPTION [-e] [-m]" << std::endl;
     if(verbose)
     {
         std::cout << "Parses input and prints a syntax tree to standard out" << std::endl
@@ -338,6 +338,7 @@ void display_usage(bool verbose)
                 << std::endl
                 << "Output control:" << std::endl
                 << "  -y, --yacc" << std::endl
+                << "  -e, --expand-ebnf" << std::endl
                 << "  -l, --lisp" << std::endl
                 << "  -x, --xml" << std::endl
                 << "  -g, --graph" << std::endl
@@ -346,7 +347,7 @@ void display_usage(bool verbose)
                 << "  -h, --help" << std::endl;
     }
     else
-        std::cout << "Try `XLang --help\' for more information." << std::endl;
+        std::cout << "Try `ebnf2yacc --help\' for more information." << std::endl;
 }
 
 struct args_t
@@ -365,9 +366,10 @@ struct args_t
     mode_e mode;
     std::string in_xml;
     bool dump_memory;
+    bool expand_ebnf;
 
     args_t()
-        : mode(MODE_NONE), dump_memory(false)
+        : mode(MODE_NONE), dump_memory(false), expand_ebnf(false)
     {}
 };
 
@@ -375,17 +377,18 @@ bool parse_args(int argc, char** argv, args_t &args)
 {
     int opt = 0;
     int longIndex = 0;
-    static const char *optString = "i:ylxgdmh?";
+    static const char *optString = "i:yelxgdmh?";
     static const struct option longOpts[] = {
-                { "in-xml", required_argument, NULL, 'i' },
-                { "yacc",   no_argument,       NULL, 'y' },
-                { "lisp",   no_argument,       NULL, 'l' },
-                { "xml",    no_argument,       NULL, 'x' },
-                { "graph",  no_argument,       NULL, 'g' },
-                { "dot",    no_argument,       NULL, 'd' },
-                { "memory", no_argument,       NULL, 'm' },
-                { "help",   no_argument,       NULL, 'h' },
-                { NULL,     no_argument,       NULL, 0 }
+                { "in-xml",      required_argument, NULL, 'i' },
+                { "yacc",        no_argument,       NULL, 'y' },
+                { "expand-ebnf", no_argument,       NULL, 'e' },
+                { "lisp",        no_argument,       NULL, 'l' },
+                { "xml",         no_argument,       NULL, 'x' },
+                { "graph",       no_argument,       NULL, 'g' },
+                { "dot",         no_argument,       NULL, 'd' },
+                { "memory",      no_argument,       NULL, 'm' },
+                { "help",        no_argument,       NULL, 'h' },
+                { NULL,          no_argument,       NULL, 0 }
             };
     opt = getopt_long(argc, argv, optString, longOpts, &longIndex);
     while(opt != -1)
@@ -394,6 +397,7 @@ bool parse_args(int argc, char** argv, args_t &args)
         {
             case 'i': args.in_xml = optarg; break;
             case 'y': args.mode = args_t::MODE_YACC; break;
+            case 'e': args.expand_ebnf = true; break;
             case 'l': args.mode = args_t::MODE_LISP; break;
             case 'x': args.mode = args_t::MODE_XML; break;
             case 'g': args.mode = args_t::MODE_GRAPH; break;
@@ -442,12 +446,17 @@ bool import_ast(args_t &args, xl::Allocator &alloc, xl::node::NodeIdentIFace* &a
 
 void export_ast(args_t &args, xl::node::NodeIdentIFace* ast)
 {
+    if(args.expand_ebnf)
+    {
+        EBNFPrinter v(tree_context());
+        rewrite_tree_until_stable(ast, &v);
+    }
     switch(args.mode)
     {
         case args_t::MODE_YACC:
             {
                 EBNFPrinter v(tree_context());
-                rewrite_tree_until_stable(ast, &v);
+                v.dispatch_visit(ast);
             }
             break;
         case args_t::MODE_LISP:  xl::mvc::MVCView::print_lisp(ast); break;

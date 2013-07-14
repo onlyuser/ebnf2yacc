@@ -1,5 +1,5 @@
-// XLang
-// -- A parser framework for language modeling
+// ebnf2yacc
+// -- A kleene closure preprocessor for yacc
 // Copyright (C) 2011 Jerry Chen <mailto:onlyuser@gmail.com>
 //
 // This program is free software: you can redistribute it and/or modify
@@ -20,7 +20,8 @@
 
 %{
 
-#include "XLang.h" // node::NodeIdentIFace
+#include "XLang.h"
+#include "node/XLangNodeIFace.h" // node::NodeIdentIFace
 #include "XLang.tab.h" // ID_XXX (yacc generated)
 #include "XLangAlloc.h" // Allocator
 #include "XLangSystem.h" // system::add_sighandler
@@ -39,6 +40,7 @@
 #include <iostream> // std::cout
 #include <stdlib.h> // EXIT_SUCCESS
 #include <getopt.h> // getopt_long
+#include <assert.h> // assert
 
 #define MAKE_TERM(lexer_id, ...)   xl::mvc::MVCModel::make_term(&pc->tree_context(), lexer_id, ##__VA_ARGS__)
 #define MAKE_SYMBOL(...)           xl::mvc::MVCModel::make_symbol(&pc->tree_context(), ##__VA_ARGS__)
@@ -211,7 +213,7 @@ ParserContext* &parser_context()
 %%
 
 root:
-      grammar { pc->tree_context().root() = $1; }
+      grammar { pc->tree_context().root() = $1; YYACCEPT; }
     | error   { yyclearin; /* yyerrok; YYABORT; */ }
     ;
 
@@ -369,16 +371,18 @@ xl::node::NodeIdentIFace* make_ast(xl::Allocator &alloc, const char* s)
 
 void display_usage(bool verbose)
 {
-    std::cout << "Usage: XLang [-i|-y] OPTION [-m]" << std::endl;
+    std::cout << "Usage: XLang [-i|-f] OPTION [-e] [-m]" << std::endl;
     if(verbose)
     {
         std::cout << "Parses input and prints a syntax tree to standard out" << std::endl
                 << std::endl
                 << "Input control:" << std::endl
                 << "  -i, --in-xml FILENAME (de-serialize from xml)" << std::endl
-                << "  -y, --yacc-file FILENAME" << std::endl
+                << "  -f, --in-file FILENAME" << std::endl
                 << std::endl
                 << "Output control:" << std::endl
+                << "  -y, --yacc" << std::endl
+                << "  -e, --expand-ebnf" << std::endl
                 << "  -l, --lisp" << std::endl
                 << "  -x, --xml" << std::endl
                 << "  -g, --graph" << std::endl
@@ -404,12 +408,13 @@ struct args_t
     } mode_e;
 
     mode_e mode;
-    std::string yacc_file;
+    std::string in_file;
     std::string in_xml;
     bool dump_memory;
+    bool expand_ebnf;
 
     args_t()
-        : mode(MODE_NONE), dump_memory(false)
+        : mode(MODE_NONE), dump_memory(false), expand_ebnf(false)
     {}
 };
 
@@ -417,17 +422,19 @@ bool parse_args(int argc, char** argv, args_t &args)
 {
     int opt = 0;
     int longIndex = 0;
-    static const char *optString = "i:y:lxgdmh?";
+    static const char *optString = "i:f:yelxgdmh?";
     static const struct option longOpts[] = {
-                { "in-xml",    required_argument, NULL, 'i' },
-                { "yacc-file", required_argument, NULL, 'y' },
-                { "lisp",      no_argument,       NULL, 'l' },
-                { "xml",       no_argument,       NULL, 'x' },
-                { "graph",     no_argument,       NULL, 'g' },
-                { "dot",       no_argument,       NULL, 'd' },
-                { "memory",    no_argument,       NULL, 'm' },
-                { "help",      no_argument,       NULL, 'h' },
-                { NULL,        no_argument,       NULL, 0 }
+                { "in-xml",      required_argument, NULL, 'i' },
+                { "in-file",     required_argument, NULL, 'f' },
+                { "yacc",        no_argument,       NULL, 'y' },
+                { "expand-ebnf", no_argument,       NULL, 'e' },
+                { "lisp",        no_argument,       NULL, 'l' },
+                { "xml",         no_argument,       NULL, 'x' },
+                { "graph",       no_argument,       NULL, 'g' },
+                { "dot",         no_argument,       NULL, 'd' },
+                { "memory",      no_argument,       NULL, 'm' },
+                { "help",        no_argument,       NULL, 'h' },
+                { NULL,          no_argument,       NULL, 0 }
             };
     opt = getopt_long(argc, argv, optString, longOpts, &longIndex);
     while(opt != -1)
@@ -435,10 +442,9 @@ bool parse_args(int argc, char** argv, args_t &args)
         switch(opt)
         {
             case 'i': args.in_xml = optarg; break;
-            case 'y':
-                args.mode = args_t::MODE_YACC;
-                args.yacc_file = optarg;
-                break;
+            case 'f': args.in_file = optarg; break;
+            case 'y': args.mode = args_t::MODE_YACC; break;
+            case 'e': args.expand_ebnf = true; break;
             case 'l': args.mode = args_t::MODE_LISP; break;
             case 'x': args.mode = args_t::MODE_XML; break;
             case 'g': args.mode = args_t::MODE_GRAPH; break;
@@ -476,7 +482,7 @@ bool import_ast(args_t &args, xl::Allocator &alloc, xl::node::NodeIdentIFace* &a
     else
     {
         std::string s;
-        if(!xl::read_file(args.yacc_file, s))
+        if(!xl::read_file(args.in_file, s))
             return false;
         ast = make_ast(alloc, s.c_str());
         if(!ast)
@@ -490,12 +496,17 @@ bool import_ast(args_t &args, xl::Allocator &alloc, xl::node::NodeIdentIFace* &a
 
 void export_ast(args_t &args, xl::node::NodeIdentIFace* ast)
 {
+    if(args.expand_ebnf)
+    {
+        EBNFPrinter v(&parser_context()->tree_context());
+        rewrite_tree_until_stable(ast, &v);
+    }
     switch(args.mode)
     {
         case args_t::MODE_YACC:
             {
                 EBNFPrinter v(&parser_context()->tree_context());
-                rewrite_tree_until_stable(ast, &v);
+                v.dispatch_visit(ast);
             }
             break;
         case args_t::MODE_LISP:  xl::mvc::MVCView::print_lisp(ast); break;
