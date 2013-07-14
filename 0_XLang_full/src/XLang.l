@@ -1,5 +1,5 @@
-/* XLang
- * -- A parser framework for language modeling
+/* ebnf2yacc
+ * -- A kleene closure preprocessor for yacc
  * Copyright (C) 2011 Jerry Chen <mailto:onlyuser@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
