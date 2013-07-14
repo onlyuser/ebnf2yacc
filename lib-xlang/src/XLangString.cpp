@@ -16,7 +16,7 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #include "XLangString.h" // Allocator
-#include <iostream> // std::cout
+#include <iostream> // std::cerr
 #include <string> // std::string
 #include <sstream> // std::stringstream
 #include <string.h> // strcpy
@@ -31,7 +31,7 @@ bool read_file(std::string filename, std::string& s)
     FILE* file = fopen(filename.c_str(), "rb");
     if(!file)
     {
-        std::cout << "cannot open file" << std::endl;
+        std::cerr << "cannot open file" << std::endl;
         return false;
     }
     fseek(file, 0, SEEK_END);
@@ -39,7 +39,7 @@ bool read_file(std::string filename, std::string& s)
     rewind(file);
     if(!length)
     {
-        std::cout << "file empty" << std::endl;
+        std::cerr << "file empty" << std::endl;
         fclose(file);
         return false;
     }
@@ -47,7 +47,7 @@ bool read_file(std::string filename, std::string& s)
     buffer[length] = '\0';
     if(!buffer)
     {
-        std::cout << "not enough memory" << std::endl;
+        std::cerr << "not enough memory" << std::endl;
         fclose(file);
         return false;
     }
