@@ -86,7 +86,7 @@ clean_libs_parent :
 # yacc-gen
 #==================
 
-YACC_STEMS = XLang.tab
+YACC_STEMS = ebnf2yacc.tab
 YACC_GEN = \
 		$(patsubst %, $(SRC_PATH)/%.cpp, $(YACC_STEMS)) \
 		$(patsubst %, $(INCLUDE_PATH)/%.h, $(YACC_STEMS))
@@ -106,7 +106,7 @@ clean_yacc :
 # lex-gen
 #==================
 
-LEX_STEMS = lex.XLang
+LEX_STEMS = lex.ebnf2yacc
 LEX_GEN = $(patsubst %, $(SRC_PATH)/%.cpp, $(LEX_STEMS))
 .SECONDARY : $(LEX_GEN)
 

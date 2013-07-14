@@ -16,7 +16,7 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #include "EBNFPrinter.h" // EBNFPrinter
-#include "XLang.tab.h" // ID_XXX (yacc generated)
+#include "ebnf2yacc.tab.h" // ID_XXX (yacc generated)
 #include "mvc/XLangMVCModel.h" // mvc::MVCModel
 #include "node/XLangNodeIFace.h" // node::NodeIdentIFace
 #include "node/XLangNode.h" // node::Node

@@ -15,24 +15,26 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-//%output="XLang.tab.c"
+//%output="ebnf2yacc.tab.c"
 %name-prefix="_XLANG_"
 
 %{
 
-#include "XLang.h"
+#include "ebnf2yacc.h"
 #include "node/XLangNodeIFace.h" // node::NodeIdentIFace
-#include "XLang.tab.h" // ID_XXX (yacc generated)
+#include "ebnf2yacc.tab.h" // ID_XXX (yacc generated)
 #include "XLangAlloc.h" // Allocator
 #include "XLangSystem.h" // system::add_sighandler
 #include "mvc/XLangMVCView.h" // mvc::MVCView
 #include "mvc/XLangMVCModel.h" // mvc::MVCModel
 #include "XLangTreeContext.h" // TreeContext
 #include "XLangType.h" // uint32_t
+#include "XLangString.h" // xl::read_file
 #include "TreeRewriter.h" // ebnf_to_bnf
 #include "EBNFPrinter.h" // EBNFPrinter
 #include <stdio.h> // size_t
 #include <stdarg.h> // va_start
+#include <string.h> // strlen
 #include <string> // std::string
 #include <sstream> // std::stringstream
 #include <iostream> // std::cout
@@ -40,16 +42,49 @@
 #include <getopt.h> // getopt_long
 #include <assert.h> // assert
 
-#define MAKE_TERM(lexer_id, ...)   xl::mvc::MVCModel::make_term(tree_context(), lexer_id, ##__VA_ARGS__)
-#define MAKE_SYMBOL(...)           xl::mvc::MVCModel::make_symbol(tree_context(), ##__VA_ARGS__)
+#define MAKE_TERM(lexer_id, ...)   xl::mvc::MVCModel::make_term(&pc->tree_context(), lexer_id, ##__VA_ARGS__)
+#define MAKE_SYMBOL(...)           xl::mvc::MVCModel::make_symbol(&pc->tree_context(), ##__VA_ARGS__)
 #define ERROR_LEXER_ID_NOT_FOUND   "missing lexer id handler, most likely you forgot to register one"
 #define ERROR_LEXER_NAME_NOT_FOUND "missing lexer name handler, most likely you forgot to register one"
 #define EOL                        xl::node::SymbolNode::eol();
 
 // report error
+void _XLANG_error(YYLTYPE* loc, ParserContext* pc, yyscan_t scanner, const char* s)
+{
+    if(loc)
+    {
+        std::stringstream ss;
+        int line_start = 0;
+        int line_end = 0;
+        for(int i = pc->scanner_context().m_pos; i >= 0; i--)
+        {
+            if(pc->scanner_context().m_buf[i] == '\n')
+            {
+                line_start = i+1;
+                break;
+            }
+        }
+        for(int j = pc->scanner_context().m_pos; j < pc->scanner_context().m_length; j++)
+        {
+            if(pc->scanner_context().m_buf[j] == '\n')
+            {
+                line_end = j;
+                break;
+            }
+        }
+        std::string line(pc->scanner_context().m_buf, line_start, line_end-line_start);
+        ss << line << std::endl;
+        ss << std::string(loc->first_column-1, '-') <<
+                std::string(loc->last_column - loc->first_column + 1, '^') << std::endl <<
+                loc->first_line << ":c" << loc->first_column << " to " <<
+                loc->last_line << ":c" << loc->last_column << std::endl;
+        error_messages() << ss.str();
+    }
+    error_messages() << s;
+}
 void _XLANG_error(const char* s)
 {
-    error_messages() << s;
+    _XLANG_error(NULL, NULL, NULL, s);
 }
 
 // get resource
@@ -134,28 +169,26 @@ uint32_t name_to_id(std::string name)
     throw ERROR_LEXER_NAME_NOT_FOUND;
     return 0;
 }
-xl::TreeContext* &tree_context()
+ParserContext* &parser_context()
 {
-    static xl::TreeContext* tc = NULL;
-    return tc;
+    static ParserContext* pc = NULL;
+    return pc;
 }
 
 %}
 
-// type of yylval to be set by scanner actions
-// implemented as %union in non-reentrant mode
-%union
-{
-    xl::node::TermInternalType<xl::node::NodeIdentIFace::INT>::type    int_value;    // int value
-    xl::node::TermInternalType<xl::node::NodeIdentIFace::FLOAT>::type  float_value;  // float value
-    xl::node::TermInternalType<xl::node::NodeIdentIFace::STRING>::type string_value; // string value
-    xl::node::TermInternalType<xl::node::NodeIdentIFace::CHAR>::type   char_value;   // char value
-    xl::node::TermInternalType<xl::node::NodeIdentIFace::IDENT>::type  ident_value;  // def_symbol table index
-    xl::node::TermInternalType<xl::node::NodeIdentIFace::SYMBOL>::type symbol_value; // node pointer
-}
+// 'pure_parser' tells bison to use no global variables and create a
+// reentrant parser (NOTE: deprecated, use "%define api.pure" instead).
+%define api.pure
+%parse-param {ParserContext* pc}
+%parse-param {yyscan_t scanner}
+%lex-param {scanner}
 
 // show detailed parse errors
 %error-verbose
+
+// record where each token occurs in input
+%locations
 
 %nonassoc ID_BASE
 
@@ -180,13 +213,13 @@ xl::TreeContext* &tree_context()
 %%
 
 root:
-      grammar { tree_context()->root() = $1; YYACCEPT; }
+      grammar { pc->tree_context().root() = $1; YYACCEPT; }
     | error   { yyclearin; /* yyerrok; YYABORT; */ }
     ;
 
 grammar:
       definitions ID_FENCE rules ID_FENCE code {
-                $$ = MAKE_SYMBOL(ID_GRAMMAR, 3, $1, $3, $5);
+                $$ = MAKE_SYMBOL(ID_GRAMMAR, @$, 3, $1, $3, $5);
             }
     ;
 
@@ -195,66 +228,66 @@ grammar:
 
 definitions:
       /* empty */            { $$ = EOL; }
-    | definitions definition { $$ = MAKE_SYMBOL(ID_DEFINITIONS, 2, $1, $2); }
+    | definitions definition { $$ = MAKE_SYMBOL(ID_DEFINITIONS, @$, 2, $1, $2); }
     ;
 
 definition:
-      '%' ID_IDENT                     { $$ = MAKE_SYMBOL(ID_DEFINITION, 1, MAKE_TERM(ID_IDENT, $2)); }
-    | '%' ID_IDENT def_symbols         { $$ = MAKE_SYMBOL(ID_DEFINITION, 2, MAKE_TERM(ID_IDENT, $2), $3); }
-    | '%' ID_IDENT '{' union_block '}' { $$ = MAKE_SYMBOL(ID_DEFINITION, 2, MAKE_TERM(ID_IDENT, $2), $4); }
+      '%' ID_IDENT                     { $$ = MAKE_SYMBOL(ID_DEFINITION, @$, 1, MAKE_TERM(ID_IDENT, @$, $2)); }
+    | '%' ID_IDENT def_symbols         { $$ = MAKE_SYMBOL(ID_DEFINITION, @$, 2, MAKE_TERM(ID_IDENT, @$, $2), $3); }
+    | '%' ID_IDENT '{' union_block '}' { $$ = MAKE_SYMBOL(ID_DEFINITION, @$, 2, MAKE_TERM(ID_IDENT, @$, $2), $4); }
     | '%' ID_IDENT '=' ID_STRING {
-                $$ = MAKE_SYMBOL(ID_DEF_EQ, 2,
-                        MAKE_TERM(ID_IDENT, $2),
-                        MAKE_TERM(ID_STRING, $4));
+                $$ = MAKE_SYMBOL(ID_DEF_EQ, @$, 2,
+                        MAKE_TERM(ID_IDENT, @$, $2),
+                        MAKE_TERM(ID_STRING, @$, $4));
             }
     | '%' ID_IDENT '<' ID_IDENT '>' def_symbols {
-                $$ = MAKE_SYMBOL(ID_DEF_BRACE, 3,
-                        MAKE_TERM(ID_IDENT, $2),
-                        MAKE_TERM(ID_IDENT, $4),
+                $$ = MAKE_SYMBOL(ID_DEF_BRACE, @$, 3,
+                        MAKE_TERM(ID_IDENT, @$, $2),
+                        MAKE_TERM(ID_IDENT, @$, $4),
                         $6);
             }
     | def_proto_block { $$ = $1; }
     ;
 
 def_symbols:
-      def_symbol             { $$ = MAKE_SYMBOL(ID_DEF_SYMBOLS, 1, $1); }
-    | def_symbols def_symbol { $$ = MAKE_SYMBOL(ID_DEF_SYMBOLS, 2, $1, $2); }
+      def_symbol             { $$ = MAKE_SYMBOL(ID_DEF_SYMBOLS, @$, 1, $1); }
+    | def_symbols def_symbol { $$ = MAKE_SYMBOL(ID_DEF_SYMBOLS, @$, 2, $1, $2); }
     ;
 
 def_symbol:
-      ID_IDENT { $$ = MAKE_SYMBOL(ID_DEF_SYMBOL, 1, MAKE_TERM(ID_IDENT, $1)); }
-    | ID_CHAR  { $$ = MAKE_SYMBOL(ID_DEF_SYMBOL, 1, MAKE_TERM(ID_CHAR, $1)); }
+      ID_IDENT { $$ = MAKE_SYMBOL(ID_DEF_SYMBOL, @$, 1, MAKE_TERM(ID_IDENT, @$, $1)); }
+    | ID_CHAR  { $$ = MAKE_SYMBOL(ID_DEF_SYMBOL, @$, 1, MAKE_TERM(ID_CHAR, @$, $1)); }
     ;
 
 union_block:
-      union_members { $$ = MAKE_SYMBOL(ID_UNION_BLOCK, 1, $1); }
+      union_members { $$ = MAKE_SYMBOL(ID_UNION_BLOCK, @$, 1, $1); }
     ;
 
 union_members:
       /* empty */                { $$ = EOL; }
-    | union_members union_member { $$ = MAKE_SYMBOL(ID_UNION_MEMBERS, 2, $1, $2); }
+    | union_members union_member { $$ = MAKE_SYMBOL(ID_UNION_MEMBERS, @$, 2, $1, $2); }
     ;
 
 union_member:
-      union_terms ';' { $$ = MAKE_SYMBOL(ID_UNION_MEMBER, 1, $1); }
+      union_terms ';' { $$ = MAKE_SYMBOL(ID_UNION_MEMBER, @$, 1, $1); }
     ;
 
 union_terms:
       /* empty */            { $$ = EOL; }
-    | union_terms union_term { $$ = MAKE_SYMBOL(ID_UNION_TERMS, 2, $1, $2); }
+    | union_terms union_term { $$ = MAKE_SYMBOL(ID_UNION_TERMS, @$, 2, $1, $2); }
     ;
 
 union_term:
       ID_STRING {
-                $$ = MAKE_SYMBOL(ID_UNION_TERM, 1,
-                        MAKE_TERM(ID_STRING, $1));
+                $$ = MAKE_SYMBOL(ID_UNION_TERM, @$, 1,
+                        MAKE_TERM(ID_STRING, @$, $1));
             }
     ;
 
 def_proto_block:
       ID_STRING {
-                $$ = $1->size() ? MAKE_SYMBOL(ID_DEF_PROTO_BLOCK, 1,
-                        MAKE_TERM(ID_STRING, $1)) : NULL;
+                $$ = $1->size() ? MAKE_SYMBOL(ID_DEF_PROTO_BLOCK, @$, 1,
+                        MAKE_TERM(ID_STRING, @$, $1)) : NULL;
             }
     ;
 
@@ -263,47 +296,47 @@ def_proto_block:
 
 rules:
       /* empty */ { $$ = EOL; }
-    | rules rule  { $$ = MAKE_SYMBOL(ID_RULES, 2, $1, $2); }
+    | rules rule  { $$ = MAKE_SYMBOL(ID_RULES, @$, 2, $1, $2); }
     ;
 
 rule:
       ID_IDENT ':' rule_alts ';' {
-                $$ = MAKE_SYMBOL(ID_RULE, 2, MAKE_TERM(ID_IDENT, $1), $3);
+                $$ = MAKE_SYMBOL(ID_RULE, @$, 2, MAKE_TERM(ID_IDENT, @$, $1), $3);
             }
     ;
 
 rule_alts:
-      rule_alt               { $$ = MAKE_SYMBOL(ID_RULE_ALTS, 1, $1); }
-    | rule_alts '|' rule_alt { $$ = MAKE_SYMBOL(ID_RULE_ALTS, 2, $1, $3); }
+      rule_alt               { $$ = MAKE_SYMBOL(ID_RULE_ALTS, @$, 1, $1); }
+    | rule_alts '|' rule_alt { $$ = MAKE_SYMBOL(ID_RULE_ALTS, @$, 2, $1, $3); }
     ;
 
 rule_alt:
-      rule_terms rule_action_block { $$ = MAKE_SYMBOL(ID_RULE_ALT, 2, $1, $2); }
+      rule_terms rule_action_block { $$ = MAKE_SYMBOL(ID_RULE_ALT, @$, 2, $1, $2); }
     ;
 
 rule_action_block:
       /* empty */ { $$ = NULL; }
     | ID_STRING {
-                $$ = $1->size() ? MAKE_SYMBOL(ID_RULE_ACTION_BLOCK, 1,
-                        MAKE_TERM(ID_STRING, $1)) : NULL;
+                $$ = $1->size() ? MAKE_SYMBOL(ID_RULE_ACTION_BLOCK, @$, 1,
+                        MAKE_TERM(ID_STRING, @$, $1)) : NULL;
             }
     ;
 
 rule_terms:
       /* empty */          { $$ = EOL; }
-    | rule_terms rule_term { $$ = MAKE_SYMBOL(ID_RULE_TERMS, 2, $1, $2); }
+    | rule_terms rule_term { $$ = MAKE_SYMBOL(ID_RULE_TERMS, @$, 2, $1, $2); }
     ;
 
 rule_term:
-//      ID_INT            { $$ = MAKE_TERM(ID_INT, $1); } // NOTE: not needed
-//    | ID_FLOAT          { $$ = MAKE_TERM(ID_FLOAT, $1); } // NOTE: not needed
-//    | ID_STRING         { $$ = MAKE_TERM(ID_STRING, $1); } // NOTE: causes shift-reduce conflict
-      ID_CHAR           { $$ = MAKE_TERM(ID_CHAR, $1); }
-    | ID_IDENT          { $$ = MAKE_TERM(ID_IDENT, $1); }
-    | rule_term '+'     { $$ = MAKE_SYMBOL('+', 1, $1); }
-    | rule_term '*'     { $$ = MAKE_SYMBOL('*', 1, $1); }
-    | rule_term '?'     { $$ = MAKE_SYMBOL('?', 1, $1); }
-    | '(' rule_alts ')' { $$ = MAKE_SYMBOL('(', 1, $2); }
+//      ID_INT            { $$ = MAKE_TERM(ID_INT, @$, $1); } // NOTE: not needed
+//    | ID_FLOAT          { $$ = MAKE_TERM(ID_FLOAT, @$, $1); } // NOTE: not needed
+//    | ID_STRING         { $$ = MAKE_TERM(ID_STRING, @$, $1); } // NOTE: causes shift-reduce conflict
+      ID_CHAR           { $$ = MAKE_TERM(ID_CHAR, @$, $1); }
+    | ID_IDENT          { $$ = MAKE_TERM(ID_IDENT, @$, $1); }
+    | rule_term '+'     { $$ = MAKE_SYMBOL('+', @$, 1, $1); }
+    | rule_term '*'     { $$ = MAKE_SYMBOL('*', @$, 1, $1); }
+    | rule_term '?'     { $$ = MAKE_SYMBOL('?', @$, 1, $1); }
+    | '(' rule_alts ')' { $$ = MAKE_SYMBOL('(', @$, 1, $2); }
     ;
 
 //=============================================================================
@@ -311,30 +344,41 @@ rule_term:
 
 code:
       ID_STRING {
-                $$ = $1->size() ? MAKE_SYMBOL(ID_CODE, 1,
-                        MAKE_TERM(ID_STRING, $1)) : NULL;
+                //std::cerr << $1 << std::endl;
+                //throw;
+                $$ = $1->size() ? MAKE_SYMBOL(ID_CODE, @$, 1,
+                        MAKE_TERM(ID_STRING, @$, $1)) : NULL;
             }
     ;
 
 %%
 
-xl::node::NodeIdentIFace* make_ast(xl::Allocator &alloc)
+ScannerContext::ScannerContext(const char* buf)
+    : m_scanner(NULL), m_buf(buf), m_pos(0), m_length(strlen(buf)),
+      m_line(1), m_column(1), m_prev_column(1)
+{}
+
+xl::node::NodeIdentIFace* make_ast(xl::Allocator &alloc, const char* s)
 {
-    tree_context() = new (PNEW(alloc, xl::, TreeContext)) xl::TreeContext(alloc);
-    int error_code = _XLANG_parse(); // parser entry point
-    _XLANG_lex_destroy();
-    return (!error_code && error_messages().str().empty()) ? tree_context()->root() : NULL;
+    parser_context() = new (PNEW(alloc, , ParserContext)) ParserContext(alloc, s);
+    yyscan_t scanner = parser_context()->scanner_context().m_scanner;
+    _XLANG_lex_init(&scanner);
+    _XLANG_set_extra(parser_context(), scanner);
+    int error_code = _XLANG_parse(parser_context(), scanner); // parser entry point
+    _XLANG_lex_destroy(scanner);
+    return (!error_code && error_messages().str().empty()) ? parser_context()->tree_context().root() : NULL;
 }
 
 void display_usage(bool verbose)
 {
-    std::cout << "Usage: ebnf2yacc [-i] OPTION [-e] [-m]" << std::endl;
+    std::cout << "Usage: XLang [-i|-f] OPTION [-e] [-m]" << std::endl;
     if(verbose)
     {
         std::cout << "Parses input and prints a syntax tree to standard out" << std::endl
                 << std::endl
                 << "Input control:" << std::endl
                 << "  -i, --in-xml FILENAME (de-serialize from xml)" << std::endl
+                << "  -f, --in-file FILENAME" << std::endl
                 << std::endl
                 << "Output control:" << std::endl
                 << "  -y, --yacc" << std::endl
@@ -347,7 +391,7 @@ void display_usage(bool verbose)
                 << "  -h, --help" << std::endl;
     }
     else
-        std::cout << "Try `ebnf2yacc --help\' for more information." << std::endl;
+        std::cout << "Try `XLang --help\' for more information." << std::endl;
 }
 
 struct args_t
@@ -364,6 +408,7 @@ struct args_t
     } mode_e;
 
     mode_e mode;
+    std::string in_file;
     std::string in_xml;
     bool dump_memory;
     bool expand_ebnf;
@@ -377,9 +422,10 @@ bool parse_args(int argc, char** argv, args_t &args)
 {
     int opt = 0;
     int longIndex = 0;
-    static const char *optString = "i:yelxgdmh?";
+    static const char *optString = "i:f:yelxgdmh?";
     static const struct option longOpts[] = {
                 { "in-xml",      required_argument, NULL, 'i' },
+                { "in-file",     required_argument, NULL, 'f' },
                 { "yacc",        no_argument,       NULL, 'y' },
                 { "expand-ebnf", no_argument,       NULL, 'e' },
                 { "lisp",        no_argument,       NULL, 'l' },
@@ -396,6 +442,7 @@ bool parse_args(int argc, char** argv, args_t &args)
         switch(opt)
         {
             case 'i': args.in_xml = optarg; break;
+            case 'f': args.in_file = optarg; break;
             case 'y': args.mode = args_t::MODE_YACC; break;
             case 'e': args.expand_ebnf = true; break;
             case 'l': args.mode = args_t::MODE_LISP; break;
@@ -434,7 +481,10 @@ bool import_ast(args_t &args, xl::Allocator &alloc, xl::node::NodeIdentIFace* &a
     }
     else
     {
-        ast = make_ast(alloc);
+        std::string s;
+        if(!xl::read_file(args.in_file, s))
+            return false;
+        ast = make_ast(alloc, s.c_str());
         if(!ast)
         {
             std::cout << error_messages().str().c_str() << std::endl;
@@ -448,14 +498,14 @@ void export_ast(args_t &args, xl::node::NodeIdentIFace* ast)
 {
     if(args.expand_ebnf)
     {
-        EBNFPrinter v(tree_context());
+        EBNFPrinter v(&parser_context()->tree_context());
         rewrite_tree_until_stable(ast, &v);
     }
     switch(args.mode)
     {
         case args_t::MODE_YACC:
             {
-                EBNFPrinter v(tree_context());
+                EBNFPrinter v(&parser_context()->tree_context());
                 v.dispatch_visit(ast);
             }
             break;

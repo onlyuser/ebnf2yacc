@@ -1,5 +1,5 @@
-// XLang
-// -- A parser framework for language modeling
+// ebnf2yacc
+// -- A kleene closure preprocessor for yacc
 // Copyright (C) 2011 Jerry Chen <mailto:onlyuser@gmail.com>
 //
 // This program is free software: you can redistribute it and/or modify
@@ -15,11 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef XLANG_H_
-#define XLANG_H_
+#ifndef EBNF2YACC_H_
+#define EBNF2YACC_H_
 
 #include "XLangType.h" // uint32_t
-#include "XLang.tab.h" // YYLTYPE (generated)
+#include "ebnf2yacc.tab.h" // YYLTYPE (generated)
 #include "XLangAlloc.h" // Allocator
 #include "node/XLangNodeIFace.h" // node::NodeIdentIFace
 #include "XLangTreeContext.h" // TreeContext

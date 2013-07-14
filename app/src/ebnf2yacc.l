@@ -16,14 +16,14 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-%option outfile="lex.XLang.c"
+%option outfile="lex.ebnf2yacc.c"
 %option prefix="_XLANG_"
 
 %{
 
-#include "XLang.h"
+#include "ebnf2yacc.h"
 #include "node/XLangNodeIFace.h" // node::NodeIdentIFace
-#include "XLang.tab.h" // ID_XXX (yacc generated)
+#include "ebnf2yacc.tab.h" // ID_XXX (yacc generated)
 #include "XLangTreeContext.h" // TreeContext
 #include "XLangString.h" // xl::unescape
 #include <stdlib.h> // atoi
