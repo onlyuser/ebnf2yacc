@@ -49,7 +49,7 @@
 #define EOL                        xl::node::SymbolNode::eol();
 
 // report error
-void _XLANG_error(YYLTYPE* loc, ParserContext* pc, yyscan_t scanner, const char* s)
+void _EBNF2YACC_error(YYLTYPE* loc, ParserContext* pc, yyscan_t scanner, const char* s)
 {
     if(loc)
     {
@@ -82,9 +82,9 @@ void _XLANG_error(YYLTYPE* loc, ParserContext* pc, yyscan_t scanner, const char*
     }
     error_messages() << s;
 }
-void _XLANG_error(const char* s)
+void _EBNF2YACC_error(const char* s)
 {
-    _XLANG_error(NULL, NULL, NULL, s);
+    _EBNF2YACC_error(NULL, NULL, NULL, s);
 }
 
 // get resource
@@ -362,10 +362,10 @@ xl::node::NodeIdentIFace* make_ast(xl::Allocator &alloc, const char* s)
 {
     parser_context() = new (PNEW(alloc, , ParserContext)) ParserContext(alloc, s);
     yyscan_t scanner = parser_context()->scanner_context().m_scanner;
-    _XLANG_lex_init(&scanner);
-    _XLANG_set_extra(parser_context(), scanner);
-    int error_code = _XLANG_parse(parser_context(), scanner); // parser entry point
-    _XLANG_lex_destroy(scanner);
+    _EBNF2YACC_lex_init(&scanner);
+    _EBNF2YACC_set_extra(parser_context(), scanner);
+    int error_code = _EBNF2YACC_parse(parser_context(), scanner); // parser entry point
+    _EBNF2YACC_lex_destroy(scanner);
     return (!error_code && error_messages().str().empty()) ? parser_context()->tree_context().root() : NULL;
 }
 

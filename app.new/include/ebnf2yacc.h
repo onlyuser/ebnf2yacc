@@ -86,13 +86,13 @@ private:
 
 // forward declaration of lexer/parser functions
 // so the compiler shuts up about warnings
-int _XLANG_lex(YYSTYPE*, YYLTYPE*, yyscan_t);
-int _XLANG_lex_init(yyscan_t*);
-int _XLANG_lex_destroy(yyscan_t);
-void _XLANG_set_extra(YY_EXTRA_TYPE, yyscan_t);
-int _XLANG_parse(ParserContext*, yyscan_t);
-void _XLANG_error(YYLTYPE* loc, ParserContext* pc, yyscan_t scanner, const char* s);
-void _XLANG_error(const char* s);
+int _EBNF2YACC_lex(YYSTYPE*, YYLTYPE*, yyscan_t);
+int _EBNF2YACC_lex_init(yyscan_t*);
+int _EBNF2YACC_lex_destroy(yyscan_t);
+void _EBNF2YACC_set_extra(YY_EXTRA_TYPE, yyscan_t);
+int _EBNF2YACC_parse(ParserContext*, yyscan_t);
+void _EBNF2YACC_error(YYLTYPE* loc, ParserContext* pc, yyscan_t scanner, const char* s);
+void _EBNF2YACC_error(const char* s);
 
 std::stringstream &error_messages();
 std::string id_to_name(uint32_t lexer_id);

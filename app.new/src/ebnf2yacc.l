@@ -281,7 +281,7 @@ lit_float        {digit}*[.]{digit}+
 <ST_RULES>{any} {LOC;
                 char buf[40];
                 sprintf(buf, "unknown character: \'%c\'\n", *yytext);
-                _XLANG_error(buf);
+                _EBNF2YACC_error(buf);
                 YY_FLUSH_BUFFER;
                 BEGIN INITIAL;
             }
