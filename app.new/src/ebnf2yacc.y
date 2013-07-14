@@ -16,7 +16,7 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 //%output="ebnf2yacc.tab.c"
-%name-prefix="_XLANG_"
+%name-prefix="_EBNF2YACC_"
 
 %{
 

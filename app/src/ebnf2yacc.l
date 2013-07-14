@@ -17,7 +17,7 @@
  */
 
 %option outfile="lex.ebnf2yacc.c"
-%option prefix="_XLANG_"
+%option prefix="_EBNF2YACC_"
 
 %{
 
