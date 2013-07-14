@@ -16,7 +16,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 LIB_PATH = lib
-SUBPATHS = app 0_XLang_full
+SUBPATHS = app app.new
 
 .DEFAULT_GOAL : all
 all :
