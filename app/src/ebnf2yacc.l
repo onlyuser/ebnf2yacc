@@ -44,7 +44,7 @@ void reset_buf()
 
 #define PUSH_STATE   yy_push_state
 #define POP_STATE    yy_pop_state()
-#define LVAL         _EBNF2YACC_lval
+#define LVAL         _e2y(lval)
 #define TREE_CONTEXT (*tree_context())
 
 // does nothing, returns void like yy_pop_state
@@ -255,7 +255,7 @@ lit_float        {digit}*[.]{digit}+
 <ST_RULES>{any} {
                 char buf[40];
                 sprintf(buf, "unknown character: \'%c\'\n", *yytext);
-                _EBNF2YACC_error(buf);
+                _e2y(error)(buf);
                 YY_FLUSH_BUFFER;
                 BEGIN INITIAL;
             }

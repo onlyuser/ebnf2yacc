@@ -29,10 +29,12 @@ namespace xl { class TreeContext; }
 // forward declaration of lexer/parser functions
 // so the compiler shuts up about warnings
 //
-int _EBNF2YACC_lex();
-int _EBNF2YACC_lex_destroy();
-int _EBNF2YACC_parse();
-void _EBNF2YACC_error(const char* s);
+#define _e2y(x) _EBNF2YACC_##x
+int _e2y(lex)();
+int _e2y(lex_destroy)();
+int _e2y(parse)();
+void _e2y(error)(const char* s);
+//#undef _e2y
 
 std::stringstream &error_messages();
 std::string id_to_name(uint32_t lexer_id);

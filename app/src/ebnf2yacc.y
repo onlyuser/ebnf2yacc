@@ -47,7 +47,7 @@
 #define EOL                        xl::node::SymbolNode::eol();
 
 // report error
-void _EBNF2YACC_error(const char* s)
+void _e2y(error)(const char* s)
 {
     error_messages() << s;
 }
@@ -321,8 +321,8 @@ code:
 xl::node::NodeIdentIFace* make_ast(xl::Allocator &alloc)
 {
     tree_context() = new (PNEW(alloc, xl::, TreeContext)) xl::TreeContext(alloc);
-    int error_code = _EBNF2YACC_parse(); // parser entry point
-    _EBNF2YACC_lex_destroy();
+    int error_code = _e2y(parse)(); // parser entry point
+    _e2y(lex_destroy)();
     return (!error_code && error_messages().str().empty()) ? tree_context()->root() : NULL;
 }
 
