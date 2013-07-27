@@ -175,8 +175,6 @@ xl::TreeContext* &tree_context()
 %nonassoc '|' '(' ';'
 %nonassoc '+' '*' '?'
 
-%nonassoc ID_COUNT
-
 %%
 
 root:

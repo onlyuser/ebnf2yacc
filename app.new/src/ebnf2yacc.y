@@ -208,8 +208,6 @@ ParserContext* &parser_context()
 %nonassoc '|' '(' ';'
 %nonassoc '+' '*' '?'
 
-%nonassoc ID_COUNT
-
 %%
 
 root:
