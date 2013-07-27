@@ -21,8 +21,8 @@
 
 %{
 
-#include "XLangType.h" // char*
-#include "ebnf2yacc.h" // NodeIdentIFace
+#include "ebnf2yacc.h"
+#include "node/XLangNodeIFace.h" // node::NodeIdentIFace
 #include "ebnf2yacc.tab.h" // ID_XXX (yacc generated)
 #include "XLangString.h" // xl::unescape
 #include <string.h> // memcpy
