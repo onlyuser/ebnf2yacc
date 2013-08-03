@@ -416,7 +416,7 @@ struct options_t
     {}
 };
 
-bool get_options_from_options(options_t &options, int argc, char** argv)
+bool get_options_from_args(options_t &options, int argc, char** argv)
 {
     int opt = 0;
     int longIndex = 0;
@@ -550,7 +550,7 @@ int main(int argc, char** argv)
 {
     add_signal_handlers();
     options_t options;
-    if(!get_options_from_options(options, argc, argv))
+    if(!get_options_from_args(options, argc, argv))
     {
         display_usage(false);
         return EXIT_FAILURE;
