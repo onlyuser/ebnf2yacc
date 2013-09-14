@@ -361,10 +361,10 @@ struct options_t
         MODE_HELP
     } mode_e;
 
-    mode_e mode;
+    mode_e      mode;
     std::string in_xml;
-    bool dump_memory;
-    bool expand_ebnf;
+    bool        dump_memory;
+    bool        expand_ebnf;
 
     options_t()
         : mode(MODE_NONE), dump_memory(false), expand_ebnf(false)
