@@ -76,7 +76,7 @@ Usage
 -----
 
 <pre>
-cat input.ebnf | ./ebnf2yacc -y > output.y
+cat input.ebnf | ./app/bin/ebnf2yacc -y > output.y
 </pre>
 
 Requirements
