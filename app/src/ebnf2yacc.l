@@ -109,7 +109,8 @@ lit_float        {digit}*[.]{digit}+
                 PUSH_STATE(ST_STRING);
             }
 <ST_STRING>[^\"]* {
-                LVAL.string_value = TREE_CONTEXT.alloc_string(xl::unescape(yytext));
+                std::string s(yytext);
+                LVAL.string_value = TREE_CONTEXT.alloc_string(xl::unescape(s));
                 return ID_STRING;
             }
 <ST_STRING>[\"] {
@@ -120,7 +121,8 @@ lit_float        {digit}*[.]{digit}+
                 PUSH_STATE(ST_CHAR);
             }
 <ST_CHAR>[^\']* {
-                LVAL.char_value = xl::unescape(yytext)[0];
+                std::string s(yytext);
+                LVAL.char_value = xl::unescape(s)[0];
                 return ID_CHAR;
             }
 <ST_CHAR>[\'] {
