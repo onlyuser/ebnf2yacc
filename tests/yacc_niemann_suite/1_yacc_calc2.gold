@@ -48,11 +48,9 @@
                         '\n'
                     )
                     (NULL)
-
                 )
                 (rule_alt
                     (NULL)
-
                 )
             )
         )
@@ -87,7 +85,6 @@
                         INTEGER
                     )
                     (NULL)
-
                 )
                 (rule_alt
                     (rule_terms
