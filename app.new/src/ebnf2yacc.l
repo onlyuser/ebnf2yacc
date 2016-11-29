@@ -23,7 +23,7 @@
 
 #include "ebnf2yacc.h"
 #include "node/XLangNodeIFace.h" // node::NodeIdentIFace
-#include "ebnf2yacc.tab.h" // ID_XXX (yacc generated)
+#include "ebnf2yaccLexerIDWrapper.h" // ID_XXX (yacc generated)
 #include "XLangString.h" // xl::unescape
 #include <string.h> // memcpy
 #include <stdlib.h> // atoi

@@ -22,7 +22,7 @@
 
 #include "ebnf2yacc.h"
 #include "node/XLangNodeIFace.h" // node::NodeIdentIFace
-#include "ebnf2yacc.tab.h" // ID_XXX (yacc generated)
+#include "ebnf2yaccLexerIDWrapper.h" // ID_XXX (yacc generated)
 #include "XLangAlloc.h" // Allocator
 #include "XLangSystem.h" // system::add_sighandler
 #include "mvc/XLangMVCView.h" // mvc::MVCView

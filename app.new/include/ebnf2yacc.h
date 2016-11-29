@@ -19,7 +19,7 @@
 #define EBNF2YACC_H_
 
 #include "XLangType.h" // uint32_t
-#include "ebnf2yacc.tab.h" // YYLTYPE (generated)
+#include "ebnf2yaccLexerIDWrapper.h" // YYLTYPE (generated)
 #include "XLangAlloc.h" // Allocator
 #include "node/XLangNodeIFace.h" // node::NodeIdentIFace
 #include "XLangTreeContext.h" // TreeContext
