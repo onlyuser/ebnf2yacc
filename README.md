@@ -91,7 +91,7 @@ Unix tools and 3rd party components (accessible from $PATH):
 * $INCLUDE_PATH_EXTERN -- where "ticpp/ticpp.h" resides
 * $LIB_PATH_EXTERN     -- where "libticppd.a" resides
 
-Make targets
+Make Targets
 ------------
 
 <table>
