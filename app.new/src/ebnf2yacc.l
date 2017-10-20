@@ -1,6 +1,6 @@
 /* ebnf2yacc
  * -- A kleene closure preprocessor for yacc
- * Copyright (C) 2011 Jerry Chen <mailto:onlyuser@gmail.com>
+ * Copyright (C) 2011 onlyuser <mailto:onlyuser@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,7 +17,6 @@
  */
 
 %option outfile="lex.ebnf2yacc.c"
-%option prefix="_EBNF2YACC_"
 
 %{
 
@@ -284,7 +283,7 @@ lit_float        {digit}*[.]{digit}+
 <ST_RULES>{any} {LOC;
                 char buf[40];
                 sprintf(buf, "unknown character: \'%c\'\n", *yytext);
-                _e2y(error)(buf);
+                yyerror(buf);
                 YY_FLUSH_BUFFER;
                 BEGIN INITIAL;
             }

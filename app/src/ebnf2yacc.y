@@ -1,6 +1,6 @@
 // ebnf2yacc
 // -- A kleene closure preprocessor for yacc
-// Copyright (C) 2011 Jerry Chen <mailto:onlyuser@gmail.com>
+// Copyright (C) 2011 onlyuser <mailto:onlyuser@gmail.com>
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,7 +16,6 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 //%output="ebnf2yacc.tab.c"
-%name-prefix="_EBNF2YACC_"
 
 %{
 
@@ -47,7 +46,7 @@
 #define EOL                        xl::node::SymbolNode::eol();
 
 // report error
-void _e2y(error)(const char* s)
+void yyerror(const char* s)
 {
     error_messages() << s;
 }
@@ -319,8 +318,8 @@ code:
 xl::node::NodeIdentIFace* make_ast(xl::Allocator &alloc)
 {
     tree_context() = new (PNEW(alloc, xl::, TreeContext)) xl::TreeContext(alloc);
-    int error_code = _e2y(parse)(); // parser entry point
-    _e2y(lex_destroy)();
+    int error_code = yyparse(); // parser entry point
+    yylex_destroy();
     return (!error_code && error_messages().str().empty()) ? tree_context()->root() : NULL;
 }
 

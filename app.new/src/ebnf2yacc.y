@@ -1,6 +1,6 @@
 // ebnf2yacc
 // -- A kleene closure preprocessor for yacc
-// Copyright (C) 2011 Jerry Chen <mailto:onlyuser@gmail.com>
+// Copyright (C) 2011 onlyuser <mailto:onlyuser@gmail.com>
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,7 +16,6 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 //%output="ebnf2yacc.tab.c"
-%name-prefix="_EBNF2YACC_"
 
 %{
 
@@ -49,7 +48,7 @@
 #define EOL                        xl::node::SymbolNode::eol();
 
 // report error
-void _e2y(error)(YYLTYPE* loc, ParserContext* pc, yyscan_t scanner, const char* s)
+void yyerror(YYLTYPE* loc, ParserContext* pc, yyscan_t scanner, const char* s)
 {
     if(loc)
     {
@@ -82,9 +81,9 @@ void _e2y(error)(YYLTYPE* loc, ParserContext* pc, yyscan_t scanner, const char* 
     }
     error_messages() << s;
 }
-void _e2y(error)(const char* s)
+void yyerror(const char* s)
 {
-    _e2y(error)(NULL, NULL, NULL, s);
+    yyerror(NULL, NULL, NULL, s);
 }
 
 // get resource
@@ -358,10 +357,10 @@ xl::node::NodeIdentIFace* make_ast(xl::Allocator &alloc, const char* s)
 {
     parser_context() = new (PNEW(alloc, , ParserContext)) ParserContext(alloc, s);
     yyscan_t scanner = parser_context()->scanner_context().m_scanner;
-    _e2y(lex_init)(&scanner);
-    _e2y(set_extra)(parser_context(), scanner);
-    int error_code = _e2y(parse)(parser_context(), scanner); // parser entry point
-    _e2y(lex_destroy)(scanner);
+    yylex_init(&scanner);
+    yyset_extra(parser_context(), scanner);
+    int error_code = yyparse(parser_context(), scanner); // parser entry point
+    yylex_destroy(scanner);
     return (!error_code && error_messages().str().empty()) ? parser_context()->tree_context().root() : NULL;
 }
 

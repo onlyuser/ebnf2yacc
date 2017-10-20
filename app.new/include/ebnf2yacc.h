@@ -1,6 +1,6 @@
 // ebnf2yacc
 // -- A kleene closure preprocessor for yacc
-// Copyright (C) 2011 Jerry Chen <mailto:onlyuser@gmail.com>
+// Copyright (C) 2011 onlyuser <mailto:onlyuser@gmail.com>
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -86,15 +86,13 @@ private:
 
 // forward declaration of lexer/parser functions
 // so the compiler shuts up about warnings
-#define _e2y(x) _EBNF2YACC_##x
-int _e2y(lex)(YYSTYPE*, YYLTYPE*, yyscan_t);
-int _e2y(lex_init)(yyscan_t*);
-int _e2y(lex_destroy)(yyscan_t);
-void _e2y(set_extra)(YY_EXTRA_TYPE, yyscan_t);
-int _e2y(parse)(ParserContext*, yyscan_t);
-void _e2y(error)(YYLTYPE* loc, ParserContext* pc, yyscan_t scanner, const char* s);
-void _e2y(error)(const char* s);
-//#undef _e2y
+int yylex(YYSTYPE*, YYLTYPE*, yyscan_t);
+int yylex_init(yyscan_t*);
+int yylex_destroy(yyscan_t);
+void yyset_extra(YY_EXTRA_TYPE, yyscan_t);
+int yyparse(ParserContext*, yyscan_t);
+void yyerror(YYLTYPE* loc, ParserContext* pc, yyscan_t scanner, const char* s);
+void yyerror(const char* s);
 
 std::stringstream &error_messages();
 std::string id_to_name(uint32_t lexer_id);

@@ -1,6 +1,6 @@
 /* ebnf2yacc
  * -- A kleene closure preprocessor for yacc
- * Copyright (C) 2011 Jerry Chen <mailto:onlyuser@gmail.com>
+ * Copyright (C) 2011 onlyuser <mailto:onlyuser@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,7 +17,6 @@
  */
 
 %option outfile="lex.ebnf2yacc.c"
-%option prefix="_EBNF2YACC_"
 
 %{
 
@@ -44,7 +43,7 @@ void reset_buf()
 
 #define PUSH_STATE   yy_push_state
 #define POP_STATE    yy_pop_state()
-#define LVAL         _e2y(lval)
+#define LVAL         yylval
 #define TREE_CONTEXT (*tree_context())
 
 // does nothing, returns void like yy_pop_state
@@ -257,7 +256,7 @@ lit_float        {digit}*[.]{digit}+
 <ST_RULES>{any} {
                 char buf[40];
                 sprintf(buf, "unknown character: \'%c\'\n", *yytext);
-                _e2y(error)(buf);
+                yyerror(buf);
                 YY_FLUSH_BUFFER;
                 BEGIN INITIAL;
             }

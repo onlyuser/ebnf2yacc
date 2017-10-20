@@ -1,6 +1,6 @@
 // ebnf2yacc
 // -- A kleene closure preprocessor for yacc
-// Copyright (C) 2011 Jerry Chen <mailto:onlyuser@gmail.com>
+// Copyright (C) 2011 onlyuser <mailto:onlyuser@gmail.com>
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -28,13 +28,10 @@ namespace xl { class TreeContext; }
 
 // forward declaration of lexer/parser functions
 // so the compiler shuts up about warnings
-//
-#define _e2y(x) _EBNF2YACC_##x
-int _e2y(lex)();
-int _e2y(lex_destroy)();
-int _e2y(parse)();
-void _e2y(error)(const char* s);
-//#undef _e2y
+int yylex();
+int yylex_destroy();
+int yyparse();
+void yyerror(const char* s);
 
 std::stringstream &error_messages();
 std::string id_to_name(uint32_t lexer_id);
